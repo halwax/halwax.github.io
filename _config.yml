@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 name: Michael Halwax
 markdown: kramdown
 permalink: /blog/:year/:month/:day/:title
-=======
 theme: jekyll-theme-slate
->>>>>>> FETCH_HEAD
