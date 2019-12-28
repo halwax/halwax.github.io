@@ -12,4 +12,4 @@ I like to develop tools to aid in repetitive and tedious taks. Over the years I'
 
 ### Java Script
 
-In the last couple of years I'm getting more and more attracted by the growing JavaScript ecosystem. Specifically frameworks like Vue, React and Angular together with platforms like NodeJs and Chromium provide new sophisticated and efficient ways to develop software.
+In the last couple of years I'm getting more and more attracted by the growing JavaScript ecosystem. Specifically frameworks like Vue, React and Angular combined with platforms like NodeJs and Chromium provide new sophisticated and efficient ways to develop software.
