@@ -8,7 +8,7 @@ For my day job, I'm a Senior Java Developer and Solution Architect of Valida, an
 
 ### Software Tooling
 
-I like to develop tools to aid in repetitive and tedious taks. Over the years I've written generators and designed corresponding models for insurance service interfaces, persistence layers and reporting runtimes. Another interesting task was to support technical migrations like switching a from an Eclipse OSGI environment to Spring Boot applying scripted refactorings on a large code base. In this context I've been using several open-source projects such as JDT, EMF and Xext for many years.
+I like to develop tools to aid in repetitive and tedious taks. Over the years I've written generators and designed corresponding models for insurance service interfaces, persistence layers and reporting runtimes. Another interesting task was to support technical migrations like switching from an Eclipse OSGI environment to Spring Boot applying scripted refactorings on a large code base. In this context I've been using several open-source projects such as JDT, EMF and Xext for many years.
 
 ### Java Script
 
