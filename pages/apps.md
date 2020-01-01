@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "A list of apps"
+title: "Apps"
 permalink: "/apps/"
 ---
 
