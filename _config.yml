@@ -74,7 +74,7 @@ gems:
   - jekyll-feed # Create an Atom feed using the official Jekyll feed gem
 
 collections:
-  - apps
+  apps
 
 # Exclude these files from your production _site
 exclude:
