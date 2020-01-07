@@ -9,6 +9,10 @@
       <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
 
+    {% for cssLink in page.cssLinks %}
+    <link rel="stylesheet" type="text/css" href="{{ cssLink }}" />
+    {% endfor %}
+
     <link rel="stylesheet" type="text/css" href="{{ site.baseurl }}/style.css" />
     <link rel="alternate" type="application/rss+xml" title="{{ site.name }} - {{ site.description }}" href="{{ site.baseurl }}/feed.xml" />
 
@@ -17,7 +21,7 @@
 
   <body>
     <div class="wrapper-masthead">
-      <div class="container">
+      <div class="site-container">
         <header class="masthead clearfix">
           <a href="{{ site.baseurl }}/" class="site-avatar"><img src="{{ site.avatar }}" /></a>
 
@@ -35,12 +39,12 @@
       </div>
     </div>
 
-    <div id="main" role="main" class="container">
+    <div id="main" role="main" {% if page.noSiteContainer %}{% else %}class="site-container"{% endif %}>
       {{ content }}
     </div>
 
     <div class="wrapper-footer">
-      <div class="container">
+      <div class="site-container">
         <footer class="footer">
           {% include svg-icons.html %}
         </footer>

@@ -23,11 +23,16 @@ body {
   color: $darkGray;
 }
 
-.container {
+.site-container {
   margin: 0 auto;
   max-width: 740px;
   padding: 0 10px;
   width: 100%;
+}
+
+.app-container {
+  margin-left: 20px;
+  margin-right: 20px;
 }
 
 h1, h2, h3, h4, h5, h6 {

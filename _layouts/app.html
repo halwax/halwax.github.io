@@ -1,13 +1,25 @@
----
-layout: default
----
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{% if page.title %}{{ page.title }} – {% endif %}{{ site.name }} – {{ site.description }}</title>
 
-<article class="app">
-  <h1>{{ page.title }}</h1>
+    {% include meta.html %}
 
-  <div class="entry">
-    {{ content }}
-  </div>
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
 
-  {% include disqus.html %}
-</article>
+    {% for cssLink in page.cssLinks %}
+    <link rel="stylesheet" type="text/css" href="{{ cssLink }}" />
+    {% endfor %}
+  </head>
+
+  <body>
+
+    <div id="main" role="main" {% if page.noSiteContainer %}{% else %}class="site-container"{% endif %}>
+      {{ content }}
+    </div>
+
+    {% include analytics.html %}
+  </body>
+</html>

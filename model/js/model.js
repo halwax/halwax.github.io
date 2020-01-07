@@ -106,3 +106,9 @@ var model = {
   ]
 };
 
+var mClassPathToHref = function (mClassPath) {
+  var lastSegmentIdx = mClassPath.lastIndexOf('.');
+  var packagePath = mClassPath.substring(0, lastSegmentIdx);
+  var className = mClassPath.substring(lastSegmentIdx + 1, mClassPath.length);
+  return '#' + packagePath + '!class=' + className;
+}
