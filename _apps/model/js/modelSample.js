@@ -1,43 +1,61 @@
 const tsDefaultModel = 
-`class VeryLongClassName {}
-
-class Person {
-  firstName: string
-  lastName: string
-  pets: Animal[]
-  address: Address
-  partner: Person
-  children: Person[]
-  gender: Gender
+`namespace scribdev {
+  export const package = 'io.github.scribdev'
 }
 
-class Animal {
-  name: string
+namespace scribdev.person {
+
+  import Address = scribdev.core.Address
+  import Gender = scribdev.core.Gender
+  import Animal = scribdev.misc.Animal
+
+  class Person {
+    firstName: string
+    lastName: string
+    pets: Animal[]
+    address: Address
+    partner: Person
+    children: Person[]
+    gender: Gender
+  }
+
 }
 
-class Dog extends Animal {
+namespace scribdev.core {
+
+  export class Address {
+    street: string
+    number: number
+    city: City
+  }
+
+  class City {
+    name: string
+    code: number
+    country: Country
+  }
+
+  class Country {
+    name: string
+    code: string
+  }
+
+  export enum Gender {
+    MALE,
+    FEMALE,
+  }
+
 }
 
-class Address {
-  street: string
-  number: number
-  city: City
-}
+namespace scribdev.misc {
+  class VeryLongClassName {}
 
-class City {
-  name: string
-  code: number
-  country: Country
-}
+  export class Animal {
+    name: string
+  }
 
-class Country {
-  name: string
-  code: string
-}
-
-enum Gender {
-  MALE,
-  FEMALE,
+  class Dog extends Animal {
+  }
 }`;
 
 /*
