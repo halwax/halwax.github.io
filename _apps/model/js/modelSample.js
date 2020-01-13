@@ -1,5 +1,7 @@
 const tsDefaultModel = 
-`class Person {
+`class VeryLongClassName {}
+
+class Person {
   firstName: string
   lastName: string
   pets: Animal[]

@@ -25,7 +25,7 @@ class ClassDiagram {
       '',
       position.x, position.y,
       0, 0,
-      'align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=1;horizontalStack=0;resizeParent=1;moveParent=1;resizeLast=0;collapsible=0;rounded=0;shadow=0;strokeWidth=2;fillColor=#FFFFFF;perimeterSpacing=0;swimlaneFillColor=#ffffff;fontStyle=0;swimlaneLine=0;html=1;'
+      'align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=1;horizontalStack=0;resizeParent=1;moveParent=1;resizeLast=0;collapsible=0;rounded=0;shadow=0;strokeWidth=2;fillColor=#FFFFFF;perimeterSpacing=0;swimlaneFillColor=#ffffff;fontStyle=0;'
     );
     if(classVertex.geometry.width < 100) {
       graph.resizeCell(classVertex, new mxRectangle(classVertex.geometry.x, classVertex.geometry.y, 100, classVertex.geometry.height));
@@ -47,8 +47,8 @@ class ClassDiagram {
 
   fillClassContainer(graph, classVertex, mClassObj) {
 
-    let children = [];
     let offset = classVertex.geometry.height + 2;
+    let width = classVertex.geometry.width;
   
     let stereotypeVertex = undefined;
     if (_.size(mClassObj.stereotypes) > 0) {
@@ -57,7 +57,7 @@ class ClassDiagram {
         'text;fontSize=10;align=center;fontColor=#454545;verticalAlign=top;overflow=hidden;strokeColor=none;spacingBottom=-2;');
       graph.updateCellSize(stereotypeVertex);
       offset += stereotypeVertex.geometry.height;
-      children.push(stereotypeVertex);
+      width = this.calculateWidth(graph, width, stereotypeVertex);
     }
   
     let href = mClassPathToHref(mClassObj.path);
@@ -71,21 +71,25 @@ class ClassDiagram {
       'text;align=center;verticalAlign=top;spacingTop=-2;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0;strokeColor=none;');
     graph.updateCellSize(classNameVertex);
     offset += classNameVertex.geometry.height;
-    children.push(classNameVertex);
+    width = this.calculateWidth(graph, width, classNameVertex);
 
-    let attributes = this.addAttributes(graph, classVertex, mClassObj, offset, children);
+    let attributes = this.addAttributes(graph, classVertex, mClassObj, offset, width);
     offset = attributes.offset;
-    children = children.concat(attributes.attributeVertexList);
+    width = attributes.width;
+    
+    graph.resizeCell(classNameVertex, new mxRectangle(classNameVertex.geometry.x, classNameVertex.geometry.y, width, classNameVertex.geometry.height));
     
     // let stereotype line width match class container width
-    graph.resizeCell(classNameVertex, new mxRectangle(classNameVertex.geometry.x, classNameVertex.geometry.y, classVertex.geometry.width, classNameVertex.geometry.height));
-  
     if(!_.isNil(stereotypeVertex)) {
-      graph.resizeCell(stereotypeVertex, new mxRectangle(stereotypeVertex.geometry.x, stereotypeVertex.geometry.y, classVertex.geometry.width, stereotypeVertex.geometry.height));
+      graph.resizeCell(stereotypeVertex, new mxRectangle(stereotypeVertex.geometry.x, stereotypeVertex.geometry.y, width, stereotypeVertex.geometry.height));
     }
   }
 
-  addAttributes(graph, classVertex, mClassObj, offset) {
+  calculateWidth(graph, width, vertex) {
+    return Math.max(width, graph.getPreferredSizeForCell(vertex).width);
+  }
+
+  addAttributes(graph, classVertex, mClassObj, offset, width) {
     let attributeVertexList = [];
     if (_.size(mClassObj.mAttributes) > 0) {
       // add divider line
@@ -98,18 +102,20 @@ class ClassDiagram {
           'text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;movable=0;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0;strokeColor=none;');
         graph.updateCellSize(attributeVertex);
         offset += attributeVertex.geometry.height;
+        width = this.calculateWidth(graph, width, attributeVertex);
         attributeVertexList.push(attributeVertex);
       }
       
       // let divider line width match class container width
-      graph.resizeCell(dividerLine, new mxRectangle(dividerLine.geometry.x, dividerLine.geometry.y, classVertex.geometry.width, 1));
+      graph.resizeCell(dividerLine, new mxRectangle(dividerLine.geometry.x, dividerLine.geometry.y, width, 1));
 
       for(let attributeVertex of attributeVertexList) {
-        graph.resizeCell(attributeVertex, new mxRectangle(attributeVertex.geometry.x, attributeVertex.geometry.y, classVertex.geometry.width, attributeVertex.geometry.height));
+        graph.resizeCell(attributeVertex, new mxRectangle(attributeVertex.geometry.x, attributeVertex.geometry.y, width, attributeVertex.geometry.height));
       }
     }
     return {
       offset: offset,
+      width: width,
       attributeVertexList: attributeVertexList,
     };
   }
@@ -183,7 +189,9 @@ class ClassDiagram {
   
     for (let eI = 0; eI < _.size(eEdge.labels); eI++) {
       let edgeLabel = eEdge.labels[eI];
-      graph.insertVertex(edge, null, edgeLabel.text, edgeLabel.x, edgeLabel.y, 0, 0, 'align=left;vericalAlign=top;html=1;');
+      let edgeLabelVertex = graph.insertVertex(edge, null, edgeLabel.text, 0, 10, 0, 0, 'strokeColor=none;fillColor=none;');
+      edgeLabelVertex.geometry.relative = true;
+      //edgeLabelVertex.connectable = false;
     }
   
     return edge;
@@ -240,11 +248,7 @@ class ClassDiagram {
       }
       cellLabelChanged.apply(this, arguments);
     };
-  
-    new mxSwimlaneManager(graph);
-  
-    let parent = graph.getDefaultParent();
-  
+    
     graph.getModel().beginUpdate();
     
     let classDiagramObj = {};
