@@ -49,7 +49,7 @@ Vue.component('vModelApp', {
   },
   computed: {
     navigationDrawerWidth() {
-      return '400';
+      return '550';
     }
   },
   methods: {
