@@ -1,5 +1,12 @@
 const tsDefaultModel = 
-`namespace scribdev {
+`function Entity() { 
+  return (constructorFunction: Function) => {}
+}
+function Id() {
+    return (target: any, propertyKey: string | symbol) => {}
+}
+
+namespace scribdev {
   export const package = 'io.github.scribdev'
 }
 
@@ -9,9 +16,12 @@ namespace scribdev.person {
   import Gender = scribdev.core.Gender
   import Animal = scribdev.misc.Animal
 
+  @Entity()
   class Person {
-    firstName: string
-    lastName: string
+    @Id()
+    id: Number
+    firstName: String
+    lastName: String
     pets: Animal[]
     address: Address
     partner: Person
@@ -24,20 +34,20 @@ namespace scribdev.person {
 namespace scribdev.core {
 
   export class Address {
-    street: string
-    number: number
+    street: String
+    number: Number
     city: City
   }
 
   class City {
-    name: string
-    code: number
+    name: String
+    code: Number
     country: Country
   }
 
   class Country {
-    name: string
-    code: string
+    name: String
+    code: String
   }
 
   export enum Gender {
@@ -51,7 +61,7 @@ namespace scribdev.misc {
   class VeryLongClassName {}
 
   export class Animal {
-    name: string
+    name: String
   }
 
   class Dog extends Animal {

@@ -23,7 +23,7 @@ class Model {
       mGeneralizations: [],
     }
 
-    const mClasses = this.collectMClasses(this.sourceFile);
+    const mClasses = this.collectMClasses('', this.sourceFile);
     const mClassNames = [];
     for (let mClass of mClasses) {
       mClassNames.push(mClass.name);
@@ -40,7 +40,7 @@ class Model {
         if (mClassNames.includes(mProperty.typeName)) {
           mReferences.push({
             source: mClass.path,
-            target: this.toMPath(mProperty.typeName),
+            target: this.toMPath('', mProperty.typeName),
             sourceLabel: '',
             targetLabel: mProperty.name + ' : ' + (mProperty.isArrayType ? '0..*' : '0..1'),
           });
@@ -55,7 +55,7 @@ class Model {
       for(let mGeneralization of mClass.mGeneralizations) {
         model.mGeneralizations.push({
           source: mClass.path,
-          target: this.toMPath(mGeneralization),
+          target: this.toMPath('', mGeneralization),
         });
       }
 
@@ -66,23 +66,24 @@ class Model {
     return model;
   }
 
-  collectMClasses(tsNode) {
+  collectMClasses(mNamespace, tsNode) {
     let mClasses = [];
     ts.forEachChild(tsNode, (child) => {
       if (child.kind === ts.SyntaxKind.ClassDeclaration) {
         if(typeof child.name === 'undefined') {
           return;
         }
-        mClasses.push(this.toMClass(child));
+        mClasses.push(this.toMClass(mNamespace, child));
       } else {
-        mClasses = mClasses.concat(this.collectMClasses(child));
+        mClasses = mClasses.concat(this.collectMClasses(mNamespace, child));
       }
     });
     return mClasses;
   }
 
-  toMClass(tsClass) {
-    const mClass = this.toMClassDeclaration(tsClass);
+  toMClass(mNamespace, tsClass) {
+
+    const mClass = this.toMClassDeclaration(mNamespace, tsClass);
     const mProperties = [];
     const mGeneralizations = [];
     
@@ -98,42 +99,8 @@ class Model {
 
     ts.forEachChild(tsClass, (child) => {
       if (ts.SyntaxKind.PropertyDeclaration === child.kind) {
-
-        let propertyName = child.name.text;
-        if(typeof child.type === 'undefined') {
-          mProperties.push({
-            name: propertyName,
-            typeName: '',
-            isArrayType: false,
-          });
-          return;
-        }
-        let isArrayType = ts.SyntaxKind.ArrayType === child.type.kind;
-        let type = isArrayType ? child.type.elementType : child.type;
-        
-        
-        let typeName = '';
-        if(ts.SyntaxKind.StringKeyword === type.kind) {
-          typeName = 'String';
-        } else if(ts.SyntaxKind.NumberKeyword === type.kind) {
-          typeName = 'Number';
-        } else if(ts.SyntaxKind.BigIntKeyword === type.kind) {
-          typeName = 'BigInt';
-        } else if(ts.SyntaxKind.BooleanKeyword === type.kind) {
-          typeName = 'Boolean';
-        } else {
-          if(typeof type.typeName === 'undefined') {
-            console.log(propertyName + ' : ' + ts.SyntaxKind[type.kind]);
-          } else {
-            typeName = type.typeName.text;
-          }
-        }
-
-        mProperties.push({
-          name: propertyName,
-          typeName: typeName,
-          isArrayType: isArrayType,
-        });
+        let mProperty = this.toMProperty(child);
+        mProperties.push(mProperty);
       }
     });
 
@@ -143,16 +110,53 @@ class Model {
     return mClass;
   }
 
-  toMClassDeclaration(tsType) {
+  toMProperty(child) {
+    let propertyName = child.name.text;
+    if(typeof child.type === 'undefined') {
+      return {
+        name: propertyName,
+        typeName: '',
+        isArrayType: false,
+      };
+    }
+
+    let isArrayType = ts.SyntaxKind.ArrayType === child.type.kind;
+    let type = isArrayType ? child.type.elementType : child.type;
+    
+    let typeName = '';
+    if(ts.SyntaxKind.StringKeyword === type.kind) {
+      typeName = 'String';
+    } else if(ts.SyntaxKind.NumberKeyword === type.kind) {
+      typeName = 'Number';
+    } else if(ts.SyntaxKind.BigIntKeyword === type.kind) {
+      typeName = 'BigInt';
+    } else if(ts.SyntaxKind.BooleanKeyword === type.kind) {
+      typeName = 'Boolean';
+    } else {
+      if(typeof type.typeName === 'undefined') {
+        console.log(propertyName + ' : ' + ts.SyntaxKind[type.kind]);
+      } else {
+        typeName = type.typeName.text;
+      }
+    }
+
+    return {
+      name: propertyName,
+      typeName: typeName,
+      isArrayType: isArrayType,
+    };
+  }
+
+  toMClassDeclaration(mNamespace, tsType) {
     const className = tsType.name.text;
     return {
-      path: this.toMPath(className),
+      path: this.toMPath(mNamespace, className),
       name: className,
     };
   }
 
-  toMPath(typeName) {
-    return 'model.domain.' + typeName;
+  toMPath(mNamespace, typeName) {
+    return mNamespace + '.' + typeName;
   }
 
 }

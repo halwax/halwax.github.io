@@ -46,9 +46,6 @@ Vue.component('vMonacoEditor', {
         height: parseInt(parentStyle.height),
       });
     },
-    pxToNumber(pxString) {
-
-    },
     initMonaco() {
       let settings = {
         value: this.content,
@@ -60,11 +57,11 @@ Vue.component('vMonacoEditor', {
         monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
           noSemanticValidation: false,
           noSyntaxValidation: false,
-          experimentalDecorators: true,
         });
         monaco.languages.typescript.typescriptDefaults.setCompilerOptions({ 
           noLib: true,
-          allowNonTsExtensions: true
+          allowNonTsExtensions: true,
+          experimentalDecorators: true,
         });
         monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
           target: monaco.languages.typescript.ScriptTarget.ES6,
@@ -73,6 +70,7 @@ Vue.component('vMonacoEditor', {
 
         // Register the additional library.
         monaco.languages.typescript.javascriptDefaults.addExtraLib(typeScriptEs5Lib.value, typeScriptEs5Lib.name);
+        monaco.languages.typescript.typescriptDefaults.addExtraLib(typeScriptEs5Lib.value, typeScriptEs5Lib.name);
       };
       this.editor = monaco.editor.create(this.$el, settings);
       this.editor.onDidChangeModelContent(event => {
