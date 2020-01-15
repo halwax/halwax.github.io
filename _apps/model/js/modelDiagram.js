@@ -33,6 +33,7 @@ class ModelDiagram {
 
     graph.setCellsMovable(false);
     graph.cellsSelectable = false;
+
   }
 
   toSvg(graph) {

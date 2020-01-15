@@ -215,14 +215,14 @@ class ClassDiagram {
     this.modelDiagram.initGraphStyle(graph);
   
     graph.getCursorForCell = function (cell) {
-      if (!_.isNil(cell) && !(typeof cell.value === 'undefined') && mxUtils.isNode(cell.value)) {
+      if (typeof cell.value !== 'undefined' && !_.isNil(cell) && mxUtils.isNode(cell.value)) {
         return 'pointer';
       }
     };
   
     graph.addListener(mxEvent.CLICK, function (sender, evt) {
       let cell = evt.getProperty('cell');
-      if (!_.isNil(cell) && !(typeof cell.value === 'undefined') && mxUtils.isNode(cell.value)) {
+      if (typeof cell.value !== 'undefined' && !_.isNil(cell) && mxUtils.isNode(cell.value)) {
         location.href = cell.value.getAttribute('link');
       }
     });
