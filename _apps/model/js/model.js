@@ -24,9 +24,9 @@ class Model {
     }
 
     const mClasses = this.collectMClasses('', this.sourceFile, new Map());
-    const mClassPaths = [];
+    const mClassMap = new Map();
     for (let mClass of mClasses) {
-      mClassPaths.push(mClass.path);
+      mClassMap.set(mClass.path, mClass);
     }
 
     for (let mClass of mClasses) {
@@ -37,7 +37,8 @@ class Model {
       let mReferences = [];
 
       for (let mProperty of mClass.mProperties) {
-        if (mClassPaths.includes(mProperty.typePath)) {
+        let isReference = mClassMap.has(mProperty.typePath) && !mClassMap.get(mProperty.typePath).isEnum;
+        if (isReference) {
           mReferences.push({
             source: mClass.path,
             target: mProperty.typePath,
@@ -48,6 +49,7 @@ class Model {
           mAttributes.push({
             name: mProperty.name,
             typeName: mProperty.typeName + (mProperty.isArrayType ? '[]' : ''),
+            typePath: mProperty.typePath,
           });
         }
       }
@@ -90,7 +92,6 @@ class Model {
 
   toMImportPath(tsNode) {
     let importPath = '';
-    console.log(ts.SyntaxKind[tsNode.kind]);
     if(tsNode.kind === ts.SyntaxKind.Identifier) {
       importPath = tsNode.escapedText;
     }
@@ -107,7 +108,7 @@ class Model {
   collectMClasses(mNamespace, tsNode, importMap) {
     let mClasses = [];
     ts.forEachChild(tsNode, (child) => {
-      if (child.kind === ts.SyntaxKind.ClassDeclaration) {
+      if (child.kind === ts.SyntaxKind.ClassDeclaration || child.kind === ts.SyntaxKind.EnumDeclaration) {
         if(typeof child.name === 'undefined') {
           return;
         }
@@ -159,6 +160,14 @@ class Model {
 
     mClass.mProperties = mProperties;
     mClass.mGeneralizations = mGeneralizations;
+
+    if(tsClass.kind === ts.SyntaxKind.EnumDeclaration && typeof tsClass.members !== 'undefined') {
+      let mLiterals = [];
+      for(let member of tsClass.members) {
+        mLiterals.push(member.name.text);
+      }
+      mClass.mLiterals = mLiterals;
+    }
 
     return mClass;
   }
@@ -216,6 +225,7 @@ class Model {
     return {
       path: mNamespace + '.' + className,
       name: className,
+      isEnum: tsType.kind === ts.SyntaxKind.EnumDeclaration,
     };
   }
 

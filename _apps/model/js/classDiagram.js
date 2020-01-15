@@ -73,9 +73,15 @@ class ClassDiagram {
     offset += classNameVertex.geometry.height;
     width = this.calculateWidth(graph, width, classNameVertex);
 
-    let attributes = this.addAttributes(graph, classVertex, mClassObj, offset, width);
-    offset = attributes.offset;
-    width = attributes.width;
+    if(mClassObj.isEnum) {
+      let literals = this.addLiterals(graph, classVertex, mClassObj, offset, width);
+      offset = literals.offset;
+      width = literals.width;
+    } else {
+      let attributes = this.addAttributes(graph, classVertex, mClassObj, offset, width);
+      offset = attributes.offset;
+      width = attributes.width;
+    }
     
     graph.resizeCell(classNameVertex, new mxRectangle(classNameVertex.geometry.x, classNameVertex.geometry.y, width, classNameVertex.geometry.height));
     
@@ -89,34 +95,50 @@ class ClassDiagram {
     return Math.max(width, graph.getPreferredSizeForCell(vertex).width);
   }
 
+  addLiterals(graph, classVertex, mEnumObj, offset, width) {
+    let mLiteralEntries = [];
+    for(let mLiteral of mEnumObj.mLiterals) {
+      mLiteralEntries.push('- ' + mLiteral);
+    }
+    return this.addClassElements(graph, classVertex, mLiteralEntries, offset, width);
+  }
+
   addAttributes(graph, classVertex, mClassObj, offset, width) {
-    let attributeVertexList = [];
-    if (_.size(mClassObj.mAttributes) > 0) {
+    let mAttributeEntries = [];
+    for(let mAttribute of mClassObj.mAttributes) {
+      mAttributeEntries.push(mAttribute.name + ' : ' + mAttribute.typeName);
+    }
+    return this.addClassElements(graph, classVertex, mAttributeEntries, offset, width);
+  }
+
+  addClassElements(graph, typeVertex, mElements, offset, width) {
+    let elementVertexList = [];
+    if (_.size(mElements) > 0) {
       // add divider line
-      let dividerLine = graph.insertVertex(classVertex, null, '', 0, offset, 100, 3, 'fillColor=#000000;strokeWidth=1;align=left;verticalAlign=middle;spacingTop=2;spacingBottom=2;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=none;');
+      let dividerLine = graph.insertVertex(typeVertex, null, '', 0, offset, 100, 3, 'fillColor=#000000;strokeWidth=1;align=left;verticalAlign=middle;spacingTop=2;spacingBottom=2;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=none;');
       offset += dividerLine.geometry.height;
   
-      for (let mAttribute of mClassObj.mAttributes) {
-        let attributeVertex = graph.insertVertex(classVertex, null, mAttribute.name + ' : ' + mAttribute.typeName,
+      for (let mElement of mElements) {
+        let elementVertex = graph.insertVertex(typeVertex, null, mElement,
           0, offset, 0, 0,
           'text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;movable=0;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0;strokeColor=none;');
-        graph.updateCellSize(attributeVertex);
-        offset += attributeVertex.geometry.height;
-        width = this.calculateWidth(graph, width, attributeVertex);
-        attributeVertexList.push(attributeVertex);
+        graph.updateCellSize(elementVertex);
+        offset += elementVertex.geometry.height;
+        width = this.calculateWidth(graph, width, elementVertex);
+        elementVertexList.push(elementVertex);
       }
       
       // let divider line width match class container width
       graph.resizeCell(dividerLine, new mxRectangle(dividerLine.geometry.x, dividerLine.geometry.y, width, 1));
 
-      for(let attributeVertex of attributeVertexList) {
-        graph.resizeCell(attributeVertex, new mxRectangle(attributeVertex.geometry.x, attributeVertex.geometry.y, width, attributeVertex.geometry.height));
+      for(let elementVertex of elementVertexList) {
+        graph.resizeCell(elementVertex, new mxRectangle(elementVertex.geometry.x, elementVertex.geometry.y, width, elementVertex.geometry.height));
       }
     }
     return {
       offset: offset,
       width: width,
-      attributeVertexList: attributeVertexList,
+      elementVertexList: elementVertexList,
     };
   }
 
@@ -215,14 +237,14 @@ class ClassDiagram {
     this.modelDiagram.initGraphStyle(graph);
   
     graph.getCursorForCell = function (cell) {
-      if (typeof cell.value !== 'undefined' && !_.isNil(cell) && mxUtils.isNode(cell.value)) {
+      if (!_.isNil(cell) && typeof cell.value !== 'undefined' &&  mxUtils.isNode(cell.value)) {
         return 'pointer';
       }
     };
   
     graph.addListener(mxEvent.CLICK, function (sender, evt) {
       let cell = evt.getProperty('cell');
-      if (typeof cell.value !== 'undefined' && !_.isNil(cell) && mxUtils.isNode(cell.value)) {
+      if (!_.isNil(cell) && typeof cell.value !== 'undefined' && mxUtils.isNode(cell.value)) {
         location.href = cell.value.getAttribute('link');
       }
     });
