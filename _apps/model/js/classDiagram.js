@@ -19,7 +19,7 @@ class ClassDiagram {
     this.mGeneralizations.push(mGeneralization);
   }
 
-  insertClassInGraph(graph, parent, mClassObj, position, dimension) {
+  insertClassInGraph(graph, parent, mClassObj, position) {
 
     let classVertex = graph.insertVertex(parent, null,
       '',
@@ -51,8 +51,14 @@ class ClassDiagram {
     let width = classVertex.geometry.width;
   
     let stereotypeVertex = undefined;
-    if (_.size(mClassObj.stereotypes) > 0) {
-      stereotypeVertex = graph.insertVertex(classVertex, null, '<<Entity>>',
+    if (_.size(mClassObj.mAnnotations) > 0) {
+      let stereotypeText = '';
+      for(let mAnnotation of mClassObj.mAnnotations) {
+        stereotypeText = mAnnotation.name;
+      }
+
+
+      stereotypeVertex = graph.insertVertex(classVertex, null, '<<' + stereotypeText + '>>',
         0, offset, 0, 0,
         'text;fontSize=10;align=center;fontColor=#454545;verticalAlign=top;overflow=hidden;strokeColor=none;spacingBottom=-2;');
       graph.updateCellSize(stereotypeVertex);

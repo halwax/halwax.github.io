@@ -222,11 +222,32 @@ class Model {
 
   toMClassDeclaration(mNamespace, tsType) {
     const className = tsType.name.text;
+    const mAnnotations = [];
+    if(typeof tsType.decorators !== 'undefined') {
+      for(let tsDecorator of tsType.decorators) {
+        mAnnotations.push(this.toMAnnotation(tsDecorator));
+      }
+    }
     return {
       path: mNamespace + '.' + className,
       name: className,
       isEnum: tsType.kind === ts.SyntaxKind.EnumDeclaration,
+      mAnnotations: mAnnotations,
     };
+  }
+
+  toMAnnotation(tsDecorator) {
+    let annotationName = this.toExpressionName(tsDecorator.expression);
+    return {
+      name: annotationName
+    };
+  }
+
+  toExpressionName(expression) {
+    if(expression.kind === ts.SyntaxKind.CallExpression && expression.expression.kind === ts.SyntaxKind.Identifier) {
+      return expression.expression.text;
+    }
+    return '';
   }
 
 }
