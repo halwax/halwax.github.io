@@ -1,11 +1,11 @@
 Vue.component('vModelApp', {
   template: `
   <vApp id="root">
-    <vAppBar app clipped-left>
+    <vAppBar app :clipped-left="$vuetify.breakpoint.mdAndUp">
       <vAppBarNavIcon @click.stop="drawer = !drawer"></vAppBarNavIcon>
       <vToolbarTitle>Model</vToolbarTitle>
     </vAppBar>
-    <vNavigationDrawer v-model="drawer" :width="navigationDrawerWidth" clipped app>
+    <vNavigationDrawer app v-model="drawer" :width="navigationDrawerWidth" clipped>
       <vTabs vertical v-model="selectedTab">
         <vTab :key="'editor'" style="min-width: 50px;"><vIcon>mdi-file-document-edit-outline</vIcon></vTab>
         <vTab :key="'navigator'" style="min-width: 50px;"><vIcon>mdi-file-tree</vIcon></vTab>
