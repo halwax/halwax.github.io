@@ -1,9 +1,19 @@
+const router = new VueRouter({
+  routes: [{
+    path: '/', 
+    component: vModelViewer
+  }],
+});
+
 Vue.component('vModelApp', {
   template: `
   <vApp id="root">
-    <vAppBar app :clipped-left="$vuetify.breakpoint.mdAndUp">
+    <vAppBar app :clipped-left="$vuetify.breakpoint.mdAndUp" :extension-height="32">
       <vAppBarNavIcon @click.stop="drawer = !drawer"></vAppBarNavIcon>
       <vToolbarTitle>Model</vToolbarTitle>
+      <template v-slot:extension>
+        <vBreadcrumbs :items="breadCrumbs"></vBreadcrumbs>
+      </template>
     </vAppBar>
     <vNavigationDrawer app v-model="drawer" :width="navigationDrawerWidth" clipped>
       <vTabs vertical v-model="selectedTab">
@@ -25,7 +35,7 @@ Vue.component('vModelApp', {
       </vNavigationDrawer>
     <vContent>
       <vContainer fluid>
-        <vModelViewer :mPackage="mModel"/>
+        <routerView/>
       </vContainer>
     </vContent>
     <vFooter app clipped>
@@ -36,32 +46,39 @@ Vue.component('vModelApp', {
   </vApp>
   `,
   data: function() {
-    const mModel = new Model(tsDefaultModel).toMModel();
     return {
-      mModel: mModel,
-      content: tsDefaultModel,
-      newContent: tsDefaultModel,
       expansionPanels: 0,
       drawer: false,
       selectedTab: null,
       items: [],
+      breadCrumbs: [{
+        text: 'Model',
+        disabled: false,
+        exact: true,
+        to: '/',
+      },],
     };
+  },
+  mounted() {
+    this.initModel();
   },
   computed: {
     navigationDrawerWidth() {
       return '550';
-    }
+    },
+    mModel() {
+      return this.$store.state.mModelObject;
+    },
+    content() {
+      return this.$store.state.mModelText;
+    },
   },
   methods: {
     changeContent: _.debounce(function (newContent) {
-      this.newContent = newContent;
-      this.syncModel();
+      this.$store.dispatch('loadModelFromText', newContent);
     }, 1000),
-    syncModel() {
-      const newMModel = new Model(this.newContent).toMModel();
-      if(JSON.stringify(newMModel) !== JSON.stringify(this.mModel)) {
-        this.mModel = newMModel;
-      }
+    initModel() {
+      this.$store.dispatch('loadDefaultModel');
     }
   },
 });
@@ -72,4 +89,6 @@ new Vue({
   vuetify: new Vuetify({theme: {
     dark: false,
   }}),
+  router,
+  store: modelStore,
 });

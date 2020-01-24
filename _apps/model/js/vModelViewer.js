@@ -1,4 +1,4 @@
-Vue.component('vModelViewer', {
+const vModelViewer = {
   template: `
   <vRow dense>
     <vCol cols="12">
@@ -6,5 +6,9 @@ Vue.component('vModelViewer', {
     </vCol>
   </vRow>
   `,
-  props: ['mPackage'],
-});
+  computed: {
+    mPackage() {
+      return this.$store.state.mModelObject;
+    }
+  },
+};
