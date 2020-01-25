@@ -1,10 +1,11 @@
 class ClassDiagram {
 
-  constructor() {
+  constructor(linkCallBack) {
     this.mClasses = [];
     this.mReferences = [];
     this.mGeneralizations = [];
     this.modelDiagram = new ModelDiagram();
+    this.linkCallBack = linkCallBack;
   }
 
   addClass(mClassObj) {
@@ -65,12 +66,10 @@ class ClassDiagram {
       offset += stereotypeVertex.geometry.height;
       width = this.calculateWidth(graph, width, stereotypeVertex);
     }
-  
-    let href = mClassPathToHref(mClassObj.path);
-  
+
     let classValueNode = document.createElement('ClassNode')
     classValueNode.setAttribute('label', mClassObj.name);
-    classValueNode.setAttribute('link', href);
+    classValueNode.setAttribute('path', mClassObj.path);
   
     let classNameVertex = graph.insertVertex(classVertex, null, classValueNode,
       0, offset, 0, 0,
@@ -248,10 +247,10 @@ class ClassDiagram {
       }
     };
   
-    graph.addListener(mxEvent.CLICK, function (sender, evt) {
+    graph.addListener(mxEvent.CLICK, (sender, evt) => {
       let cell = evt.getProperty('cell');
       if (!_.isNil(cell) && typeof cell.value !== 'undefined' && mxUtils.isNode(cell.value)) {
-        location.href = cell.value.getAttribute('link');
+        this.linkCallBack(cell.value.getAttribute('path'));
       }
     });
   

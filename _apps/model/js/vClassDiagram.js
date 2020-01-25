@@ -62,7 +62,9 @@ Vue.component('vClassDiagram', {
       this.destroyDiagram();
 
       let diagramDiv = this.$el.querySelector('#class-diagram')
-      let classDiagram = new ClassDiagram();
+      let classDiagram = new ClassDiagram((elementPath) => {
+        this.$router.push(elementPath);
+      });
 
       let mClasses = this.mPackage.mClasses;
       for (let pI = 0; pI < _.size(mClasses); pI++) {

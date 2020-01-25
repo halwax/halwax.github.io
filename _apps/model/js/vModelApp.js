@@ -1,6 +1,6 @@
 const router = new VueRouter({
   routes: [{
-    path: '/', 
+    path: '/*', 
     component: vModelViewer
   }],
 });
@@ -51,27 +51,49 @@ Vue.component('vModelApp', {
       drawer: false,
       selectedTab: null,
       items: [],
-      breadCrumbs: [{
-        text: 'Model',
-        disabled: false,
-        exact: true,
-        to: '/',
-      },],
     };
   },
   mounted() {
     this.initModel();
   },
+  watch: {
+    $route(to, from) {
+      this.$store.dispatch('selectModelElement', to.path);
+    }
+  },
   computed: {
     navigationDrawerWidth() {
       return '550';
     },
-    mModel() {
-      return this.$store.state.mModelObject;
-    },
     content() {
       return this.$store.state.mModelText;
     },
+    breadCrumbs() {
+      let breadCrumbs = [];
+      breadCrumbs.push({
+        text: 'Model',
+        disabled: false,
+        exact: true,
+        to: '/',
+      })
+      let modelSelection = this.$store.getters.modelSelection;
+      if(modelSelection.empty) {
+        return breadCrumbs;
+      }
+
+      let currentPath = '';
+      for(let elementPathSegment of modelSelection.elementPathSegments) {
+        currentPath = currentPath + (_.isEmpty(currentPath)? '' : '.') + elementPathSegment;
+        breadCrumbs.push({
+          text: elementPathSegment,
+          disabled: false,
+          exact: true,
+          to: currentPath,
+        })
+      }
+
+      return breadCrumbs;
+    }
   },
   methods: {
     changeContent: _.debounce(function (newContent) {
