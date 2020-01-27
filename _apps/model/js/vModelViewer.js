@@ -4,12 +4,17 @@ Vue.component('vPackageOverview', {
     <vCol cols="12">
       <vCard>
         <vAppBar dense short elevation="1">
+          <vIcon small>mdi-package-variant-closed</vIcon>          
           <vSubheader>Subpackages</vSubheader>
           <vSpacer></vSpacer>
         </vAppBar>
-        <vListItem v-for="mSubpackage in mSubPackages" :key="mSubpackage.name" @click="">
+        <vListItem dense v-for="mSubPackage in mSubPackages" :key="mSubPackage.name"
+          @click="navigateToSubPackage(mSubPackage)">
+          <vListItemIcon>
+            <vIcon>mdi-chevron-right</vIcon>
+          </vListItemIcon>
           <vListItemContent>
-            <vListItemTitle>{{mSubpackage.name}}</vListItemTitle>
+            <vListItemSubtitle>{{mSubPackage.name}}</vListItemSubtitle>
           </vListItemContent>
         </vListItem>
       </vCard>
@@ -20,10 +25,11 @@ Vue.component('vPackageOverview', {
     mSubPackages() {
       let mSubPackages = [];
       let modelSelection = this.$store.getters.modelSelection;
-      let model = this.$store.state.mModelObject;
-      for(let mPackage of model.mPackages) {
+      let selectedPackage = modelSelection.mPackage;
+      for(let mPackage of selectedPackage.mPackages) {
         mSubPackages.push({
-          name: mPackage.name
+          name: mPackage.name,
+          path: mPackage.path,
         })
       }
       return mSubPackages;
@@ -34,6 +40,9 @@ Vue.component('vPackageOverview', {
       new VUtils().copyToClipboard(JSON.stringify(this.$store.state.mModelObject, null, 2));
       this.$store.dispatch('showMessage', 'Model Json has been copied to clipboard');
     },
+    navigateToSubPackage(mSubPackage) {
+      this.$router.push(mSubPackage.path);
+    }
   },
 });
 

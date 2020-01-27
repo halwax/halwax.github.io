@@ -4,6 +4,7 @@ Vue.component('vClassDiagram', {
     <vCol cols="12">
       <vCard>
         <vAppBar dense short elevation="1">
+          <vIcon small>mdi-sitemap</vIcon>
           <vSubheader>Class Diagram</vSubheader>
           <vSpacer></vSpacer>
           <vBtn icon small @click="copySvgToClipboard">

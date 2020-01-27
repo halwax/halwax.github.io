@@ -56,7 +56,17 @@ const modelStore = new Vuex.Store({
       
       let selectionPath = state.mModelSelectedElementPath;
       let elementPathSegments = _.isNil(selectionPath) ? [] : selectionPath.split('.');
+
       let selectedMPackage = state.mModelObject;
+      let elementPathSegmentsToProcess = elementPathSegments.slice();
+      while(elementPathSegmentsToProcess.length > 0) {
+
+        let currentPathSegment = elementPathSegmentsToProcess.splice(0, 1)[0];
+        let matchingPackage = selectedMPackage.mPackages.find(it => it.name === currentPathSegment);
+        if(!_.isNil(matchingPackage)) {
+          selectedMPackage = matchingPackage;
+        }
+      }
       
       return {
          elementPathSegments: elementPathSegments,
