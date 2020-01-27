@@ -1,51 +1,31 @@
 Vue.component('vClassDiagram', {
   template: `
-  <vCard>
-    <vAppBar dense short elevation="1">
-      <vToolbarTitle class="subtitle-1">Class Diagram</vToolbarTitle>
-      <vSpacer></vSpacer>
-      <vBtn icon small @click="openDiagramXmlDialog">
-        <vIcon small>mdi-xml</vIcon>
-      </vBtn>
-      <vBtn icon small @click="copyDiagramXmlToClipboard">
-        <vIcon small>mdi-content-copy</vIcon>
-      </vBtn>
-      <vDialog v-model="diagramXmlDialog" width="70%">
-        <vCard>
-          <vAppBar dense short elevation="1">
-            <vToolbarTitle class="subtitle-1">Class Diagram Xml</vToolbarTitle>
-          </vAppBar>
-          <vCardText style="height:300px; margin-top: 2px;">
-            <vMonacoEditor :readOnly="true" :content="diagramXml" language="xml"/>
-          </vCardText>
-          <vCardActions>
-            <vSpacer/>
-            <vBtn text @click="copyDiagramXmlDialogToClipboard">Copy to clipboard</vBtn>
-            <vBtn text @click="diagramXmlDialog = false">Cancel</vBtn>
-          </vCardActions>
-        </vCard>
-      </vDialog>
-    </vAppBar>
-    <vCardText>
-      <div v-show="_.size(mPackage.mClasses)>0">
-        <div class="diagram" id="class-diagram" style="overflow-x: scroll;"></div>
-      </div>
-    </vCardText>
-    <vSnackbar color="sucess" v-model="copyClassDiagramXmlSnackbar" :timeout="snackbarTimeout">
-      Xml has been copied to clipboard
-      <vBtn icon @click="copyClassDiagramXmlSnackbar = false">
-        <vIcon small>mdi-close</vIcon>
-      </vBtn>
-    </vSnackbar>     
-  </vCard>
+  <vRow dense>
+    <vCol cols="12">
+      <vCard>
+        <vAppBar dense short elevation="1">
+          <vSubheader>Class Diagram</vSubheader>
+          <vSpacer></vSpacer>
+          <vBtn icon small @click="copySvgToClipboard">
+            <vIcon small>mdi-xml</vIcon>
+          </vBtn>
+          <vBtn icon small @click="copyMxgraphXmlToClipboard">
+            <vIcon small>mdi-content-copy</vIcon>
+          </vBtn>
+        </vAppBar>
+        <vCardText>
+          <div v-show="_.size(mPackage.mClasses)>0">
+            <div class="diagram" id="class-diagram" style="overflow-x: scroll;"></div>
+          </div>
+        </vCardText>   
+      </vCard>
+    </vCol>
+  </vRow>
   `,
-  props: ['mPackage'],
   data() {
     return {
       diagramXmlDialog: false,
       diagramXml: '',
-      copyClassDiagramXmlSnackbar: false,
-      snackbarTimeout: 1500,
     };
   },
   mounted() {
@@ -53,6 +33,14 @@ Vue.component('vClassDiagram', {
   },
   beforeUpdate() {
     this.renderDiagram();
+  },
+  computed: {
+    mPackage() {
+      return this.$store.state.mModelObject;
+    },
+    mPackageName() {
+      return _.capitalize(this.$store.state.mModelObject.name);
+    },
   },
   destroyed() {
     this.destroyDiagram();
@@ -93,18 +81,16 @@ Vue.component('vClassDiagram', {
       let diagramDiv = this.$el.querySelector('#class-diagram')
       diagramDiv.innerHTML = '';
     },
-    openDiagramXmlDialog() {
-      this.diagramXml = new ModelDiagram().getPrettyXml(this.graph);
-      this.diagramXmlDialog = true;
+    copySvgToClipboard() {
+      new VUtils().copyToClipboard(new ModelDiagram().getSvg(this.graph));
+      this.showCopiedToClipboardMessage('Svg');
     },
-    copyDiagramXmlDialogToClipboard() {
-      new VUtils().copyToClipboard(this.diagramXml);
-      this.copyClassDiagramXmlSnackbar = true;
-      this.diagramXmlDialog = false;
-    },
-    copyDiagramXmlToClipboard() {
+    copyMxgraphXmlToClipboard() {
       new VUtils().copyToClipboard(new ModelDiagram().getPrettyXml(this.graph));
-      this.copyClassDiagramXmlSnackbar = true;
+      this.showCopiedToClipboardMessage('Xml');
     },
+    showCopiedToClipboardMessage(type) {
+      this.$store.dispatch('showMessage', type + ' has been copied to clipboard');
+    }
   }
 });

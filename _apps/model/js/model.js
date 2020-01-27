@@ -18,6 +18,8 @@ class Model {
       path: 'model',
       name: 'model',
       qualifiedName: 'model',
+      mPackages: [],
+      mClassPaths: [],
       mClasses: [],
       mReferences: [],
       mGeneralizations: [],
@@ -25,8 +27,10 @@ class Model {
 
     const mClasses = this.collectMClasses('', this.sourceFile, new Map());
     const mClassMap = new Map();
+
     for (let mClass of mClasses) {
       mClassMap.set(mClass.path, mClass);
+      this.fillModelMPackagesHierarchy(model, mClass);
     }
 
     for (let mClass of mClasses) {
@@ -65,7 +69,38 @@ class Model {
       model.mReferences = model.mReferences.concat(mReferences);
 
     }
+
     return model;
+  }
+
+  fillModelMPackagesHierarchy(mModel, mClass) {
+    
+    let pathSegments = mClass.path.split('.');
+    pathSegments.splice(-1,1);
+
+    this.fillMPackagesHierarchy(mModel, '', pathSegments, mClass);
+  }
+
+  fillMPackagesHierarchy(mPackage, path, pathSegments, mClass) {
+    if(pathSegments.length == 0) {
+      mPackage.mClassPaths.push(mClass.path);
+      return;
+    }
+    let currentMPackageName = pathSegments.splice(0, 1)[0];
+    let currentPath = path === '' ? currentMPackageName : path + '.' + currentMPackageName;
+    let currentMPackage = mPackage.mPackages.find(childMPackage => childMPackage.name === currentMPackageName);
+    if(_.isNil(currentMPackage)) {
+      let newMPackage = {
+        path: currentPath,
+        name: currentMPackageName,
+        qualifiedName: currentPath,
+        mPackages: [],
+        mClassPaths: [],
+      };
+      mPackage.mPackages.push(newMPackage);
+      currentMPackage = newMPackage;
+    }
+    this.fillMPackagesHierarchy(currentMPackage, currentPath, pathSegments, mClass);
   }
 
   collectMClassImports(tsNode) {

@@ -1,8 +1,11 @@
 const modelStore = new Vuex.Store({
   state: () => ({
-    mModelObject: {},
+    mModelObject: {
+      mPackages: [],
+    },
     mModelText: '',
     mModelSelectedElementPath: '',
+    snackbarMessage: '',
   }),
   actions: {
     loadDefaultModel(context) {
@@ -25,6 +28,9 @@ const modelStore = new Vuex.Store({
         tidyElementPath = tidyElementPath.substring(1);
       }
       context.commit('setModelSelectedElementPath', tidyElementPath);
+    },
+    showMessage(context, snackbarMessage) {
+      context.commit('setSnackbarMessage', snackbarMessage);
     }
   },
   mutations: {
@@ -40,6 +46,9 @@ const modelStore = new Vuex.Store({
     },
     setModelSelectedElementPath(state, elementPath) {
       Vue.set(state, 'mModelSelectedElementPath', elementPath);
+    },
+    setSnackbarMessage(state, snackbarMessage) {
+      Vue.set(state, 'snackbarMessage', snackbarMessage);
     }
   },
   getters: {
@@ -47,12 +56,14 @@ const modelStore = new Vuex.Store({
       
       let selectionPath = state.mModelSelectedElementPath;
       let elementPathSegments = _.isNil(selectionPath) ? [] : selectionPath.split('.');
-
+      let selectedMPackage = state.mModelObject;
+      
       return {
          elementPathSegments: elementPathSegments,
          selectionPath,
          empty: selectionPath === '',
+         mPackage: selectedMPackage,
       };
-    }
+    },
   },
 });

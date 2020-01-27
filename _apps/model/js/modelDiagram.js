@@ -36,7 +36,7 @@ class ModelDiagram {
 
   }
 
-  toSvg(graph) {
+  getSvg(graph) {
 
     let background = '#ffffff';
     let scale = 1;
@@ -87,7 +87,7 @@ class ModelDiagram {
     svgCanvas.foAltText = '[Not supported by viewer]';
     imgExport.drawState(graph.getView().getState(graph.model.root), svgCanvas);
 
-    return mxUtils.getXml(root);
+    return mxUtils.getPrettyXml(root);
   }
 
   /**
