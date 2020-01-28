@@ -1,11 +1,12 @@
 class ClassDiagram {
 
-  constructor(linkCallBack) {
+  constructor(linkCallBack, isExternalMClass) {
     this.mClasses = [];
     this.mReferences = [];
     this.mGeneralizations = [];
     this.modelDiagram = new ModelDiagram();
     this.linkCallBack = linkCallBack;
+    this.isExternalMClass = isExternalMClass;
   }
 
   addClass(mClassObj) {
@@ -22,11 +23,15 @@ class ClassDiagram {
 
   insertClassInGraph(graph, parent, mClassObj, position) {
 
+    let fillColor = this.isExternalMClass(mClassObj)? '#F7F7F7' : '#ffffff';
+
     let classVertex = graph.insertVertex(parent, null,
       '',
       position.x, position.y,
       0, 0,
-      'align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=1;horizontalStack=0;resizeParent=1;moveParent=1;resizeLast=0;collapsible=0;rounded=0;shadow=0;strokeWidth=2;fillColor=#FFFFFF;perimeterSpacing=0;swimlaneFillColor=#ffffff;fontStyle=0;'
+      'align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=1;horizontalStack=0;resizeParent=1;' +
+      'moveParent=1;resizeLast=0;collapsible=0;rounded=0;shadow=0;strokeWidth=2;fillColor=' + fillColor + ';perimeterSpacing=0;' +
+      'swimlaneFillColor=#ffffff;fontStyle=0;'
     );
     if(classVertex.geometry.width < 100) {
       graph.resizeCell(classVertex, new mxRectangle(classVertex.geometry.x, classVertex.geometry.y, 100, classVertex.geometry.height));
@@ -57,7 +62,6 @@ class ClassDiagram {
       for(let mAnnotation of mClassObj.mAnnotations) {
         stereotypeText = mAnnotation.name;
       }
-
 
       stereotypeVertex = graph.insertVertex(classVertex, null, '<<' + stereotypeText + '>>',
         0, offset, 0, 0,

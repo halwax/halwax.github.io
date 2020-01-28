@@ -1,6 +1,6 @@
 Vue.component('vClassDiagram', {
   template: `
-  <vRow dense>
+  <vRow dense v-show="mPackageHasClasses">
     <vCol cols="12">
       <vCard>
         <vAppBar dense short elevation="1">
@@ -27,6 +27,7 @@ Vue.component('vClassDiagram', {
     return {
       diagramXmlDialog: false,
       diagramXml: '',
+      renderedMPackageJson: '',
     };
   },
   mounted() {
@@ -36,11 +37,14 @@ Vue.component('vClassDiagram', {
     this.renderDiagram();
   },
   computed: {
+    mPackageHasClasses() {
+      return this.$store.getters.selectedMPackage.mClasses.length > 0;
+    },
     mPackage() {
-      return this.$store.state.mModelObject;
+      return this.$store.getters.selectedMPackage;
     },
     mPackageName() {
-      return _.capitalize(this.$store.state.mModelObject.name);
+      return _.capitalize(this.$store.getters.selectedMPackage.name);
     },
   },
   destroyed() {
@@ -48,13 +52,21 @@ Vue.component('vClassDiagram', {
   },
   methods: {
     renderDiagram() {
+
+      let toBeRendredMPackageJson = JSON.stringify(this.mPackage);
+      if(this.renderedMPackageJson === toBeRendredMPackageJson) {
+        return;
+      }
+
       this.destroyDiagram();
 
       let diagramDiv = this.$el.querySelector('#class-diagram')
-      let classDiagram = new ClassDiagram((elementPath) => {
+      let classDiagram = new ClassDiagram(elementPath => {
         if(this.$route.path !== ('/' + elementPath)) {
           this.$router.push(elementPath);
         }
+      }, mClass => {
+        return this.mPackage.externalMClassPaths.includes(mClass.path);
       });
 
       let mClasses = this.mPackage.mClasses;
@@ -75,6 +87,8 @@ Vue.component('vClassDiagram', {
       }
 
       this.graph = classDiagram.render(diagramDiv);
+
+      this.renderedMPackageJson = toBeRendredMPackageJson;
     },
     destroyDiagram() {
       if (!_.isNil(this.graph)) {

@@ -107,6 +107,7 @@ Vue.component('vModelApp', {
   },
   mounted() {
     this.initModel();
+    this.$store.dispatch('selectModelElement', this.$route.path);
   },
   watch: {
     $route(to, from) {
@@ -121,7 +122,7 @@ Vue.component('vModelApp', {
       return this.$store.state.mModelText;
     },
     mPackageName() {
-      return _.capitalize(this.$store.state.mModelObject.name);
+      return _.capitalize(this.$store.getters.modelSelection.mPackage.name);
     },
     breadCrumbs() {
       let breadCrumbs = [];

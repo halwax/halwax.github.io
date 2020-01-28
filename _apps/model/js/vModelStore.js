@@ -1,7 +1,14 @@
 const modelStore = new Vuex.Store({
   state: () => ({
     mModelObject: {
+      path: '',
+      name: '',
+      qualifiedName: '',
       mPackages: [],
+      mClassPaths: [],
+      mClasses: [],
+      mReferences: [],
+      mGeneralizations: [],
     },
     mModelText: '',
     mModelSelectedElementPath: '',
@@ -52,6 +59,55 @@ const modelStore = new Vuex.Store({
     }
   },
   getters: {
+    selectedMPackage(state, getters) {
+      
+      let modelSelection = getters.modelSelection;
+      let mModelObject = state.mModelObject;
+
+      let selectedMPackage = {
+        name: modelSelection.mPackage.name,
+        path: modelSelection.mPackage.path,
+        mClasses: [],
+        mReferences: [],
+        mGeneralizations: [],
+        externalMClassPaths: [],
+      }
+
+      let declaredClassPaths = modelSelection.mPackage.mClassPaths;
+
+      let resolvedMClassPaths = [];
+
+      let insertMClass = mClassPath => {
+        let mClass = mModelObject.mClasses.find(mClass => mClass.path === mClassPath);
+        if(!resolvedMClassPaths.includes(mClassPath)) {
+          resolvedMClassPaths.push(mClassPath);
+          selectedMPackage.mClasses.push(mClass);
+          if(!declaredClassPaths.includes(mClassPath)) {
+            selectedMPackage.externalMClassPaths.push(mClassPath);
+          }
+        }
+        return mClass;
+      };
+
+      for(let mClassPath of declaredClassPaths) {
+
+        let mClass = insertMClass(mClassPath);
+
+        let mReferencesWithSource = mModelObject.mReferences.filter(mReference => mReference.source === mClass.path);
+        for(let mReference of mReferencesWithSource) {
+          insertMClass(mReference.target);
+        }
+        selectedMPackage.mReferences = selectedMPackage.mReferences.concat(mReferencesWithSource);
+
+        let mGeneralizationsWithClassSource = mModelObject.mGeneralizations.filter(mGeneralization => mGeneralization.source === mClass.path);
+        for(let mGeneralization of mGeneralizationsWithClassSource) {
+          insertMClass(mGeneralization.target);
+        }
+        selectedMPackage.mGeneralizations = selectedMPackage.mGeneralizations.concat(mGeneralizationsWithClassSource);
+      }
+
+      return selectedMPackage;
+    },
     modelSelection(state) {
       
       let selectionPath = state.mModelSelectedElementPath;

@@ -1,6 +1,6 @@
 Vue.component('vPackageOverview', {
   template: `
-  <vRow dense>
+  <vRow dense v-show="mPackageHasSubPackages">
     <vCol cols="12">
       <vCard>
         <vAppBar dense short elevation="1">
@@ -22,6 +22,9 @@ Vue.component('vPackageOverview', {
   </vRow>
   `,
   computed: {
+    mPackageHasSubPackages() {
+      return this.mSubPackages.length > 0;
+    },
     mSubPackages() {
       let mSubPackages = [];
       let modelSelection = this.$store.getters.modelSelection;
@@ -48,7 +51,7 @@ Vue.component('vPackageOverview', {
 
 Vue.component('vPackageDetails', {
   template: `
-  <vRow dense>
+  <vRow dense v-show="mPackageHasClasses">
     <vCol cols="12">
       <vCard>
         <vAppBar dense short elevation="1">
@@ -61,6 +64,11 @@ Vue.component('vPackageDetails', {
     </vCol>
   </vRow>
   `,
+  computed: {
+    mPackageHasClasses() {
+      return this.$store.getters.selectedMPackage.mClasses.length > 0;
+    },
+  },
 });
 
 const vModelViewer = {
