@@ -27,6 +27,11 @@ const modelStore = new Vuex.Store({
         resolve(mModelObject);
       }).then(mModelObject => {
         context.commit('setModelObject', mModelObject);
+        let originalSelectedElementPath = context.state.mModelSelectedElementPath;
+        let selectedElementPath = context.getters.modelSelection.selectionPath;
+        if(originalSelectedElementPath !== selectedElementPath) {
+          context.dispatch('selectModelElement', selectedElementPath);
+        }
       });
     },
     selectModelElement(context, elementPath) {
@@ -121,6 +126,14 @@ const modelStore = new Vuex.Store({
         let matchingPackage = selectedMPackage.mPackages.find(it => it.name === currentPathSegment);
         if(!_.isNil(matchingPackage)) {
           selectedMPackage = matchingPackage;
+        }
+      }
+
+      if(selectionPath !== selectedMPackage.path) {
+        let matchingMClass = state.mModelObject.mClasses.find(mClass => mClass.path === selectionPath);
+        if(_.isNil(matchingMClass)) {
+          selectionPath = state.mModelObject === selectedMPackage ? '' : selectedMPackage.path;
+          elementPathSegments = selectionPath.split('.');
         }
       }
       

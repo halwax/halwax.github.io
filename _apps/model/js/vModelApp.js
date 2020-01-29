@@ -28,7 +28,7 @@ Vue.component('vModelSnackbar', {
         this.message = state.snackbarMessage;
         this.show = true
       }
-    })
+    });
   }
 })
 
@@ -108,6 +108,16 @@ Vue.component('vModelApp', {
   mounted() {
     this.initModel();
     this.$store.dispatch('selectModelElement', this.$route.path);
+  },
+  created () {
+    this.$store.subscribe((mutation, state) => {
+      if (mutation.type === 'setModelSelectedElementPath') {
+        let elementPath = state.mModelSelectedElementPath;
+        if(this.$route.path !== ('/' + elementPath)) {
+          this.$router.push('/' + elementPath);
+        }
+      }
+    });
   },
   watch: {
     $route(to, from) {

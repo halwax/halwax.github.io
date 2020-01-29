@@ -15,7 +15,7 @@ class Model {
   toMModel() {
 
     const model = {
-      path: 'model',
+      path: '',
       name: 'model',
       qualifiedName: 'model',
       mPackages: [],
@@ -176,7 +176,7 @@ class Model {
         for(let hertiageType of hertiageClause.types) {
           if(ts.SyntaxKind.ExpressionWithTypeArguments === hertiageType.kind) {
             let heritageTypeName = hertiageType.expression.text;
-            let heritageTypePath = mNamespace + '.' + heritageTypeName;
+            let heritageTypePath = mNamespace + (mNamespace === '' ? '' : '.') + heritageTypeName;
             if(importMap.has(heritageTypeName)) {
               heritageTypePath = importMap.get(heritageTypeName);
             }
@@ -244,7 +244,7 @@ class Model {
     if(importMap.has(typeName)) {
       typePath = importMap.get(typeName);
     } else if(inNamespace) {
-      typePath = mNamespace + '.' + typeName;
+      typePath = mNamespace + (mNamespace === '' ? '' : '.') + typeName;
     }
 
     return {
@@ -264,7 +264,7 @@ class Model {
       }
     }
     return {
-      path: mNamespace + '.' + className,
+      path: mNamespace + (mNamespace === '' ? '' : '.') + className,
       name: className,
       isEnum: tsType.kind === ts.SyntaxKind.EnumDeclaration,
       mAnnotations: mAnnotations,
