@@ -235,11 +235,6 @@ class ClassDiagram {
     let classWidth = this.calculateClassWidth();
     let classHeight = 45;
   
-    let classDimension = {
-      width: classWidth,
-      height: classHeight
-    }
-  
     let classSpace = 20;
   
     let graph = new mxGraph(graphDiv);
@@ -306,8 +301,7 @@ class ClassDiagram {
         let classNode = this.insertClassInGraph(graph,
           graph.getDefaultParent(),
           classObj,
-          classPosition,
-          classDimension);
+          classPosition);
         if (_.isNil(classNode.data)) {
           classNode.data = {};
         }

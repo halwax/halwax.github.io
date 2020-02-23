@@ -1,11 +1,11 @@
 const router = new VueRouter({
   routes: [{
     path: '/*', 
-    component: vModelViewer
+    component: vSequenceViewer
   }],
 });
 
-Vue.component('vModelSnackbar', {
+Vue.component('vStoreSnackbar', {
   template: `
   <vSnackbar :color="color" v-model="show" :timeout="timeout">
     {{message}}
@@ -23,16 +23,21 @@ Vue.component('vModelSnackbar', {
     }
   },
   created () {
-    this.$store.subscribe((mutation, state) => {
+    this.unsubscribe = this.$store.subscribe((mutation, state) => {
       if (mutation.type === 'setSnackbarMessage') {
         this.message = state.snackbarMessage;
         this.show = true
       }
     });
-  }
+  },
+  destroyed() {
+    if(typeof this.unsubscribe !== 'undefined') {
+      this.unsubscribe();
+    }
+  },
 })
 
-Vue.component('vModelNavigationTabs', {
+Vue.component('vNavigationTabs', {
   template: `
   <vTabs vertical v-model="selectedTab">
     <vTab :key="'editor'" style="min-width: 50px;"><vIcon>mdi-file-document-edit-outline</vIcon></vTab>
@@ -59,33 +64,32 @@ Vue.component('vModelNavigationTabs', {
   },
   computed: {
     content() {
-      return this.$store.state.mModelText;
+      return this.$store.state.sequenceText;
     },
   },
   methods: {
     changeContent: _.debounce(function (newContent) {
-      this.$store.dispatch('loadModelFromText', newContent);
+      this.$store.dispatch('loadSequenceFromText', newContent);
     }, 1000),
   },
 })
 
-Vue.component('vModelApp', {
+Vue.component('vSequenceApp', {
   template: `
   <vApp id="root">
     <vAppBar app :clipped-left="$vuetify.breakpoint.mdAndUp" :extension-height="32">
       <vAppBarNavIcon @click.stop="drawer = !drawer"></vAppBarNavIcon>
-      <vToolbarTitle>Model</vToolbarTitle>
+      <vToolbarTitle>Sequence</vToolbarTitle>
       <vSpacer></vSpacer>
-      <vBtn icon small @click="copyModelJsonToClipboard">
+      <vBtn icon small @click="copySequenceJsonToClipboard">
         <vIcon small>mdi-content-copy</vIcon>
       </vBtn>
       <template v-slot:extension>
-        <div class="title" style="min-width: 100px; padding-left: 5px;">{{mPackageName}}</div>
-        <vBreadcrumbs :items="breadCrumbs"></vBreadcrumbs>
+        <div class="title" style="min-width: 100px; padding-left: 5px;">{{sequenceTitle}}</div>
       </template>
     </vAppBar>
     <vNavigationDrawer app v-model="drawer" :width="navigationDrawerWidth" clipped>
-      <vModelNavigationTabs/>
+      <vNavigationTabs/>
     </vNavigationDrawer>
     <vContent>
       <vContainer fluid>
@@ -97,7 +101,7 @@ Vue.component('vModelApp', {
         {{ new Date().getFullYear() }} — <strong>Scribdev</strong>
       </vCol>
     </vFooter>
-    <vModelSnackbar/>
+    <vStoreSnackbar/>
   </vApp>
   `,
   data: function() {
@@ -106,78 +110,36 @@ Vue.component('vModelApp', {
     };
   },
   mounted() {
-    this.initModel();
-    this.$store.dispatch('selectModelElement', this.$route.path);
-  },
-  created () {
-    this.$store.subscribe((mutation, state) => {
-      if (mutation.type === 'setModelSelectedElementPath') {
-        let elementPath = state.mModelSelectedElementPath;
-        if(this.$route.path !== ('/' + elementPath)) {
-          this.$router.push('/' + elementPath);
-        }
-      }
-    });
-  },
-  watch: {
-    $route(to, from) {
-      this.$store.dispatch('selectModelElement', to.path);
-    }
+    this.initSequence();
   },
   computed: {
     navigationDrawerWidth() {
       return '550';
     },
     content() {
-      return this.$store.state.mModelText;
+      return this.$store.state.sequenceText;
     },
-    mPackageName() {
-      return _.capitalize(this.$store.getters.modelSelection.mPackage.name);
+    sequenceTitle() {
+      return this.$store.getters.sequenceObject.name;
     },
-    breadCrumbs() {
-      let breadCrumbs = [];
-      breadCrumbs.push({
-        text: 'Model',
-        disabled: false,
-        exact: true,
-        to: '/',
-      })
-      let modelSelection = this.$store.getters.modelSelection;
-      if(modelSelection.empty) {
-        return breadCrumbs;
-      }
-
-      let currentPath = '';
-      for(let elementPathSegment of modelSelection.elementPathSegments) {
-        currentPath = currentPath + (_.isEmpty(currentPath)? '' : '.') + elementPathSegment;
-        breadCrumbs.push({
-          text: elementPathSegment,
-          disabled: false,
-          exact: true,
-          to: currentPath,
-        })
-      }
-
-      return breadCrumbs;
-    }
   },
   methods: {
     changeContent: _.debounce(function (newContent) {
-      this.$store.dispatch('loadModelFromText', newContent);
+      this.$store.dispatch('initSequence', newContent);
     }, 1000),
-    initModel() {
-      this.$store.dispatch('loadDefaultModel');
+    initSequence() {
+      this.$store.dispatch('loadDefaultSequence');
     },
-    copyModelJsonToClipboard() {
-      new VUtils().copyToClipboard(JSON.stringify(this.$store.state.mModelObject, null, 2));
-      this.$store.dispatch('showMessage', 'Model Json has been copied to clipboard');
+    copySequenceJsonToClipboard() {
+      new VUtils().copyToClipboard(JSON.stringify(this.$store.state.sequenceObject, null, 2));
+      this.$store.dispatch('showMessage', 'Sequence Json has been copied to clipboard');
     }
   },
 });
 
 new Vue({
   el:'#model-app',
-  template: `<vModelApp></vModelApp>`,
+  template: `<vSequenceApp></vSequenceApp>`,
   vuetify: new Vuetify({theme: {
     dark: false,
   }}),

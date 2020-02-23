@@ -1,13 +1,13 @@
 ---
 layout: app
-title: Model Editor
-headline: Typescript to UML class diagram editor
+title: Sequence Editor
+headline: Typescript to Sequence diagram editor
 noSiteContainer: true
 cssLinks:
   - ../libs/css/roboto/roboto.css
   - ../libs/css/materialdesignicons/materialdesignicons.min.css
   - ../libs/css/vuetify/vuetify.min.css
-  - ./css/model.css
+  - ./css/sequence.css
 ---
 
 <div id="model-app"></div>
@@ -29,11 +29,11 @@ cssLinks:
 <script src="../libs/js/graphUtils.js"></script>
 <script src="js/monacoEditorConfig.js"></script>
 <script src="../libs/js/vMonacoEditor.js"></script>
-<script src="js/model.js"></script>
-<script src="js/modelSample.js"></script>
-<script src="js/modelDiagram.js"></script>
-<script src="js/classDiagram.js"></script>
-<script src="js/vModelStore.js"></script>
-<script src="js/vClassDiagram.js"></script>
-<script src="js/vModelViewer.js"></script>
-<script src="js/vModelApp.js"></script>
+<script src="js/sequence.js"></script>
+<script src="js/sequenceParser.js"></script>
+<script src="js/sequenceSample.js"></script>
+<script src="js/sequenceDiagram.js"></script>
+<script src="js/vSequenceStore.js"></script>
+<script src="js/vSequenceDiagram.js"></script>
+<script src="js/vSequenceViewer.js"></script>
+<script src="js/vSequenceApp.js"></script>

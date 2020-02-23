@@ -1,0 +1,12 @@
+.monaco-editor {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  border: 0;
+  width: 95%;
+  height: 100%;
+}
+
+.tab-item-wrapper {
+  height: 100vh;
+  max-height: calc(100vh - 132px);
+}
