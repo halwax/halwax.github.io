@@ -6,6 +6,6 @@ let service = participant(\`Service\`);
 user
     .send(controller, \`/rest/endpoint\`)
         .send(service, \`serviceMethod(...)\`)
-        .info(\`calculates result\`)
+          .info(\`calculates result\`)
         .respond()
     .respond();`;

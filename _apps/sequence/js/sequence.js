@@ -3,7 +3,7 @@ class Sequence {
   constructor(sequenceParameter) {
     
     this.participants = [];
-    this.messages = [];
+    this.elements = [];
     this.draft = false;
     this.name = '';
 
@@ -28,14 +28,14 @@ class Sequence {
   }
 
   addMessage(message) {
-    this.messages.push(message);
+    this.elements.push(message);
   }
 
   toJsonObj() {
     return {
       name: this.name,
       participants: this.participants.map(participant => participant.toJsonObj()),
-      messages: this.messages.map(message => message.toJsonObj()),
+      elements: this.elements.map(message => message.toJsonObj()),
       draft: this.draft,
     }
   }
@@ -85,9 +85,9 @@ class Participant {
 
 class Message {
 
-  constructor(sender, receiver, messageParameter) {
+  constructor(caller, receiver, messageParameter) {
     
-    this.sender = sender;
+    this.caller = caller;
     this.receiver = receiver;
     this.text = '';
     this.rootMessage = null;
@@ -109,7 +109,7 @@ class Message {
     } else if(this.response && !_.isNil(this.rootMessage)) {
       return this.rootMessage.respond(messageParameter);
     }
-    let responseMessage = this.receiver.send(this.sender, messageParameter);
+    let responseMessage = this.receiver.send(this.caller, messageParameter);
     responseMessage.rootMessage = this.rootMessage;
     responseMessage.response = true;
     return responseMessage;
@@ -132,7 +132,7 @@ class Message {
 
   toJsonObj() {
     return {
-      sender: this.sender.id,
+      caller: this.caller.id,
       receiver: this.receiver.id,
       text: this.text,
       response: this.response,

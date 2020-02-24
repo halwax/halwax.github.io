@@ -14,6 +14,10 @@ function participant(participantParam) {
   return sequence.addParticipant(participantParam);
 }
 
+function fragment(fragmentParam) {
+  return sequence.addFragment(fragmentParam);
+}
+
 ${sequenceText}
 
 sequence;`

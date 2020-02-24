@@ -4,7 +4,7 @@ const modelStore = new Vuex.Store({
     sequenceObject: {
       name: '',
       participants: [],
-      messages: [],
+      elements: [],
       draft: false,
     },
     snackbarMessage: '',

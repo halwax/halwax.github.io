@@ -91,10 +91,10 @@ class SequenceDiagram {
     return endVertex;
   }
 
-  drawMessage(graph, senderVertex, receiverVertex, message) {
+  drawMessage(graph, callerVertex, receiverVertex, message) {
 
     let edgeStyle = 'rounded=1;arcSize=2;endArrow=block;edgeStyle=orthogonalEdgeStyle;' + (message.response ? 'dashed=1;' : '');
-    let edge = graph.insertEdge(graph.getDefaultParent(), null, '', senderVertex, receiverVertex, edgeStyle);
+    let edge = graph.insertEdge(graph.getDefaultParent(), null, '', callerVertex, receiverVertex, edgeStyle);
 
     let edgeLabelDimensions = {
       width: 0,
@@ -117,11 +117,11 @@ class SequenceDiagram {
     return edgeLabelDimensions;
   }
 
-  drawInfo(graph, senderVertex, message) {
+  drawInfo(graph, callerVertex, message) {
 
     let infoVertexPosition = {
-      x: (senderVertex.geometry.x + senderVertex.geometry.width) + this.messageLabelMargin,
-      y: senderVertex.geometry.y + senderVertex.geometry.height,
+      x: (callerVertex.geometry.x + callerVertex.geometry.width) + this.messageLabelMargin,
+      y: callerVertex.geometry.y + callerVertex.geometry.height,
     }
 
     let infoVertex = graph.insertVertex(graph.getDefaultParent(), null, message.text,
@@ -179,7 +179,7 @@ class SequenceDiagram {
         participantToLifelineNodes[participant.id].unshift(lifeLineNode);
       }
 
-      for(let message of this.sequence.messages) {
+      for(let message of this.sequence.elements) {
         this.handleMessage(graph, participantToLifelineNodes, message);
       }
 
@@ -199,10 +199,10 @@ class SequenceDiagram {
 
   handleMessage(graph, participantToLifelineNodes, message) {
 
-    let senderParticipantNode = participantToLifelineNodes[message.sender][0];
+    let callerParticipantNode = participantToLifelineNodes[message.caller][0];
     let receiverParticipantNode = participantToLifelineNodes[message.receiver][0];
 
-    let [leftNode, rightNode] = [senderParticipantNode, receiverParticipantNode].sort((nodeA, nodeB) => {
+    let [leftNode, rightNode] = [callerParticipantNode, receiverParticipantNode].sort((nodeA, nodeB) => {
       return nodeA.geometry.x - nodeB.geometry.x;
     });
 
@@ -214,7 +214,7 @@ class SequenceDiagram {
       rightNode = this.nextParticipantNode(participantToLifelineNodes, receiverParticipantNode);
       messageLabelDimensions = this.drawInfo(graph, receiverParticipantNode, message);
     } else {
-      messageLabelDimensions = this.drawMessage(graph, senderParticipantNode, receiverParticipantNode, message);
+      messageLabelDimensions = this.drawMessage(graph, callerParticipantNode, receiverParticipantNode, message);
     }
 
     if(messageLabelDimensions.height > 0) {
