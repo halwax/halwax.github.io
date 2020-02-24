@@ -9,7 +9,7 @@ class SequenceDiagram {
     this.leftSpace = 20;
     this.actorSpace = 40;
     this.messageLabelMargin = 5;
-    this.lifeLineSpace = 10;
+    this.lifeLineSpace = 8;
     this.lifeLineNodeDimensions = {
       width: 1,
       height: 1,
@@ -109,7 +109,7 @@ class SequenceDiagram {
 
       let dY = -edgeLabelDimensions.height;
       if(message.response) {
-        dY -= 10;
+        dY -= 8;
       }
       graph.translateCell(edgeLabelVertex, 0, dY);
     }
@@ -183,6 +183,13 @@ class SequenceDiagram {
         this.handleMessage(graph, actorToLifelineNodes, message);
       }
 
+      for(let actor of this.sequence.actors) {
+        let lastLifeLineNode = actorToLifelineNodes[actor.id][0];
+        let lifeLineNode = this.drawLifeLine(graph, lastLifeLineNode, this.lifeLineNodeDimensions.height);
+  
+        actorToLifelineNodes[actor.id].unshift(lifeLineNode);
+      }
+
     } finally {
       graph.getModel().endUpdate();
     }
@@ -235,7 +242,6 @@ class SequenceDiagram {
           }
         }
       }
-
     }
 
     for(let actor of this.sequence.actors) {
