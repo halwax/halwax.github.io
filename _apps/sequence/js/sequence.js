@@ -2,7 +2,7 @@ class Sequence {
 
   constructor(sequenceParameter) {
     
-    this.objects = [];
+    this.participants = [];
     this.messages = [];
     this.draft = false;
     this.name = '';
@@ -14,17 +14,17 @@ class Sequence {
     }
   }
 
-  addObject(objectParameter) {
+  addParticipant(participantParameter) {
 
-    if(objectParameter instanceof SequenceObject) {
-      this.objects.push(objectParameter);
-      return objectParameter;
+    if(participantParameter instanceof Participant) {
+      this.participants.push(participantParameter);
+      return participantParameter;
     }
 
-    let object = new SequenceObject(this, objectParameter);
-    this.objects.push(object);
+    let participant = new Participant(this, participantParameter);
+    this.participants.push(participant);
 
-    return object;
+    return participant;
   }
 
   addMessage(message) {
@@ -34,21 +34,21 @@ class Sequence {
   toJsonObj() {
     return {
       name: this.name,
-      objects: this.objects.map(object => object.toJsonObj()),
+      participants: this.participants.map(participant => participant.toJsonObj()),
       messages: this.messages.map(message => message.toJsonObj()),
       draft: this.draft,
     }
   }
 }
 
-class SequenceObject {
+class Participant {
 
-  constructor(sequence, objectParameter) {
+  constructor(sequence, participantParameter) {
     this.sequence = sequence;
-    if(typeof objectParameter === 'string') {
-      this.init(objectParameter);
-    } else if(typeof objectParameter === 'function') {
-      objectParameter(this);
+    if(typeof participantParameter === 'string') {
+      this.init(participantParameter);
+    } else if(typeof participantParameter === 'function') {
+      participantParameter(this);
     }
   }
 

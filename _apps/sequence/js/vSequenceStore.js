@@ -3,7 +3,7 @@ const modelStore = new Vuex.Store({
     sequenceText: '',
     sequenceObject: {
       name: '',
-      objects: [],
+      participants: [],
       messages: [],
       draft: false,
     },

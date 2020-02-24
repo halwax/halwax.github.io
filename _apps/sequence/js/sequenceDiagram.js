@@ -4,10 +4,10 @@ class SequenceDiagram {
     this.sequence = sequence;
     this.linkCallBack = linkCallBack;
     this.graphUtils = new GraphUtils();
-    this.minObjectWidth = 20;
+    this.minParticipantWidth = 20;
     this.topSpace = 20;
     this.leftSpace = 20;
-    this.objectSpace = 40;
+    this.participantSpace = 40;
     this.messageLabelMargin = 5;
     this.lifeLineSpace = 10;
     this.lifeLineNodeDimensions = {
@@ -16,13 +16,13 @@ class SequenceDiagram {
     }
   }
 
-  insertObjectInGraph(graph, object, position) {
+  insertParticipantInGraph(graph, participant, position) {
 
     let fillColor = '#ffffff';
 
     let comicStyle = this.sequence.draft ? 1 : 0;
 
-    let objectVertex = graph.insertVertex(graph.getDefaultParent(), null,
+    let participantVertex = graph.insertVertex(graph.getDefaultParent(), null,
       '',
       position.x, position.y,
       0, 0,
@@ -30,44 +30,44 @@ class SequenceDiagram {
       'moveParent=1;resizeLast=0;collapsible=0;rounded=0;shadow=0;strokeWidth=2;fillColor=' + fillColor + ';perimeterSpacing=0;' +
       'swimlaneFillColor=#ffffff;fontStyle=0;'
     );
-    if(objectVertex.geometry.width < this.minObjectWidth) {
-      graph.resizeCell(objectVertex, new mxRectangle(objectVertex.geometry.x, objectVertex.geometry.y, this.minObjectWidth, objectVertex.geometry.height));
+    if(participantVertex.geometry.width < this.minParticipantWidth) {
+      graph.resizeCell(participantVertex, new mxRectangle(participantVertex.geometry.x, participantVertex.geometry.y, this.minParticipantWidth, participantVertex.geometry.height));
     }
   
     // Creates a stack depending on the orientation of the swimlane
-    let layout = new mxStackLayout(objectVertex, false);
+    let layout = new mxStackLayout(participantVertex, false);
     // Makes sure all children fit into the parent swimlane
     layout.resizeParent = true;        
     // Applies the size to children if parent size changes
     layout.fill = true;
   
-    this.fillObjectContainer(graph, objectVertex, object);
+    this.fillParticipantContainer(graph, participantVertex, participant);
   
-    graph.resizeCell(objectVertex, new mxRectangle(objectVertex.geometry.x, objectVertex.geometry.y, objectVertex.geometry.width, objectVertex.geometry.height + 3));
+    graph.resizeCell(participantVertex, new mxRectangle(participantVertex.geometry.x, participantVertex.geometry.y, participantVertex.geometry.width, participantVertex.geometry.height + 3));
     
-    return objectVertex;
+    return participantVertex;
   }
 
-  fillObjectContainer(graph, objectVertex, object) {
+  fillParticipantContainer(graph, participantVertex, participant) {
 
-    let height = objectVertex.geometry.height;
-    let width = objectVertex.geometry.width;
+    let height = participantVertex.geometry.height;
+    let width = participantVertex.geometry.width;
     let offset = height + 2;
 
-    let objectValueNode = document.createElement('ObjectNode')
-    objectValueNode.setAttribute('label', this.toLabel(object.name));
-    objectValueNode.setAttribute('id', object.id);
+    let participantValueNode = document.createElement('ParticipantNode')
+    participantValueNode.setAttribute('label', this.toLabel(participant.name));
+    participantValueNode.setAttribute('id', participant.id);
   
-    let objectTitleVertex = graph.insertVertex(objectVertex, null, objectValueNode,
+    let participantTitleVertex = graph.insertVertex(participantVertex, null, participantValueNode,
       0, offset, 0, 0,
       'text;html=1;align=center;verticalAlign=top;spacingTop=-2;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0;strokeColor=none;');
-    graph.updateCellSize(objectTitleVertex);
+    graph.updateCellSize(participantTitleVertex);
     
-    offset += objectTitleVertex.geometry.height;
-    width = this.calculateWidth(graph, width, objectTitleVertex);
-    height = this.calculateHeight(graph, height, objectTitleVertex);
+    offset += participantTitleVertex.geometry.height;
+    width = this.calculateWidth(graph, width, participantTitleVertex);
+    height = this.calculateHeight(graph, height, participantTitleVertex);
 
-    graph.resizeCell(objectTitleVertex, new mxRectangle(objectTitleVertex.geometry.x, objectTitleVertex.geometry.y, width, height));
+    graph.resizeCell(participantTitleVertex, new mxRectangle(participantTitleVertex.geometry.x, participantTitleVertex.geometry.y, width, height));
 
   }
 
@@ -153,41 +153,41 @@ class SequenceDiagram {
     
     try {
 
-      let objectPosition = {
+      let participantPosition = {
         x: this.leftSpace,
         y: this.topSpace
       }
   
-      let objectNodeMap = {};
-      let maxObjectHeight = 0;
+      let participantNodeMap = {};
+      let maxParticipantHeight = 0;
 
-      let objectToLifelineNodes = {};
-      for(let object of this.sequence.objects) {
-        let objectNode = this.insertObjectInGraph(graph,
-          object,
-          objectPosition);
+      let participantToLifelineNodes = {};
+      for(let participant of this.sequence.participants) {
+        let participantNode = this.insertParticipantInGraph(graph,
+          participant,
+          participantPosition);
 
-        objectNodeMap[object.id] = objectNode;
-        objectToLifelineNodes[object.id] = [objectNode];
+        participantNodeMap[participant.id] = participantNode;
+        participantToLifelineNodes[participant.id] = [participantNode];
 
-        objectPosition.x += this.objectSpace + objectNode.geometry.width;
-        maxObjectHeight = Math.max(maxObjectHeight, objectNode.geometry.height);
+        participantPosition.x += this.participantSpace + participantNode.geometry.width;
+        maxParticipantHeight = Math.max(maxParticipantHeight, participantNode.geometry.height);
       }
 
-      for(let object of this.sequence.objects) {
-        let lifeLineNode = this.drawLifeLine(graph, objectNodeMap[object.id], maxObjectHeight);
-        objectToLifelineNodes[object.id].unshift(lifeLineNode);
+      for(let participant of this.sequence.participants) {
+        let lifeLineNode = this.drawLifeLine(graph, participantNodeMap[participant.id], maxParticipantHeight);
+        participantToLifelineNodes[participant.id].unshift(lifeLineNode);
       }
 
       for(let message of this.sequence.messages) {
-        this.handleMessage(graph, objectToLifelineNodes, message);
+        this.handleMessage(graph, participantToLifelineNodes, message);
       }
 
-      for(let object of this.sequence.objects) {
-        let lastLifeLineNode = objectToLifelineNodes[object.id][0];
+      for(let participant of this.sequence.participants) {
+        let lastLifeLineNode = participantToLifelineNodes[participant.id][0];
         let lifeLineNode = this.drawLifeLine(graph, lastLifeLineNode, this.lifeLineNodeDimensions.height);
   
-        objectToLifelineNodes[object.id].unshift(lifeLineNode);
+        participantToLifelineNodes[participant.id].unshift(lifeLineNode);
       }
 
     } finally {
@@ -197,12 +197,12 @@ class SequenceDiagram {
     return graph;
   }
 
-  handleMessage(graph, objectToLifelineNodes, message) {
+  handleMessage(graph, participantToLifelineNodes, message) {
 
-    let senderObjectNode = objectToLifelineNodes[message.sender][0];
-    let receiverObjectNode = objectToLifelineNodes[message.receiver][0];
+    let senderParticipantNode = participantToLifelineNodes[message.sender][0];
+    let receiverParticipantNode = participantToLifelineNodes[message.receiver][0];
 
-    let [leftNode, rightNode] = [senderObjectNode, receiverObjectNode].sort((nodeA, nodeB) => {
+    let [leftNode, rightNode] = [senderParticipantNode, receiverParticipantNode].sort((nodeA, nodeB) => {
       return nodeA.geometry.x - nodeB.geometry.x;
     });
 
@@ -211,15 +211,15 @@ class SequenceDiagram {
       height: 0,
     }
     if(message.info) {
-      rightNode = this.nextObjectNode(objectToLifelineNodes, receiverObjectNode);
-      messageLabelDimensions = this.drawInfo(graph, receiverObjectNode, message);
+      rightNode = this.nextParticipantNode(participantToLifelineNodes, receiverParticipantNode);
+      messageLabelDimensions = this.drawInfo(graph, receiverParticipantNode, message);
     } else {
-      messageLabelDimensions = this.drawMessage(graph, senderObjectNode, receiverObjectNode, message);
+      messageLabelDimensions = this.drawMessage(graph, senderParticipantNode, receiverParticipantNode, message);
     }
 
     if(messageLabelDimensions.height > 0) {
-      for(let object of this.sequence.objects) {
-        let lifeLineNode = objectToLifelineNodes[object.id][0];
+      for(let participant of this.sequence.participants) {
+        let lifeLineNode = participantToLifelineNodes[participant.id][0];
         graph.translateCell(lifeLineNode, 0, messageLabelDimensions.height);
       }
     }
@@ -231,38 +231,38 @@ class SequenceDiagram {
     if(widthDifference > 0) {
 
       let shiftRight = false;
-      for(let object of this.sequence.objects) {
-        let objectLifelineNodes = objectToLifelineNodes[object.id];
-        if(objectToLifelineNodes[object.id].includes(rightNode)) {
+      for(let participant of this.sequence.participants) {
+        let participantLifelineNodes = participantToLifelineNodes[participant.id];
+        if(participantToLifelineNodes[participant.id].includes(rightNode)) {
           shiftRight = true;
         }
         if(shiftRight) {
-          for(let lifelineNode of objectLifelineNodes) {
+          for(let lifelineNode of participantLifelineNodes) {
             graph.translateCell(lifelineNode, widthDifference, 0);
           }
         }
       }
     }
 
-    for(let object of this.sequence.objects) {
+    for(let participant of this.sequence.participants) {
 
-      let lastLifeLineNode = objectToLifelineNodes[object.id][0];
+      let lastLifeLineNode = participantToLifelineNodes[participant.id][0];
       let lifeLineNode = this.drawLifeLine(graph, lastLifeLineNode, this.lifeLineNodeDimensions.height);
 
-      objectToLifelineNodes[object.id].unshift(lifeLineNode);
+      participantToLifelineNodes[participant.id].unshift(lifeLineNode);
     }    
   }
 
-  nextObjectNode(objectToLifelineNodes, lifelineNode) {
+  nextParticipantNode(participantToLifelineNodes, lifelineNode) {
 
-    for(let object of this.sequence.objects) {
-      if(objectToLifelineNodes[object.id].includes(lifelineNode)) {
-        let objectIdx = this.sequence.objects.indexOf(object);
-        let nextObject = this.sequence.objects[objectIdx + 1];
-        if(_.isNil(nextObject)) {
+    for(let participant of this.sequence.participants) {
+      if(participantToLifelineNodes[participant.id].includes(lifelineNode)) {
+        let participantIdx = this.sequence.participants.indexOf(participant);
+        let nextParticipant = this.sequence.participants[participantIdx + 1];
+        if(_.isNil(nextParticipant)) {
           return null;
         }
-        return objectToLifelineNodes[nextObject.id][0];
+        return participantToLifelineNodes[nextParticipant.id][0];
       }
     }
 

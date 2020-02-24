@@ -7,27 +7,27 @@ const appTypescriptLibraries = [
     value: `
 
   declare function title(sequenceTitle: string);
-  declare function object(object: string | Initializer<SequenceObject>): SequenceObject;
+  declare function participant(participant: string | Initializer<Participant>): Participant;
 
   declare class Sequence {
     name: string;
     draft: boolean;
     constructor(sequenceParameter: string | Initializer<Sequence>);
-    addObject(object: string | Initializer<SequenceObject>): SequenceObject;
+    addParticipant(participant: string | Initializer<Participant>): Participant;
   }
 
-  declare class SequenceObject {
+  declare class Participant {
     name: string
-    send(receiverObject: SequenceObject, messageParameter?: string | Initializer<Message>): Message;
+    send(receiver: Participant, messageParameter?: string | Initializer<Message>): Message;
     info(messageParameter: string | Initializer<Message>): Message;
   }
 
   declare class Message {
-    sender: SequenceObject;
-    receiver: SequenceObject;
+    sender: Participant;
+    receiver: Participant;
     text: string;
     respond(messageParameter?: string | Initializer<Message>): Message;
-    send(receiver: SequenceObject, messageParameter?: string | Initializer<Message>): Message;
+    send(receiver: Participant, messageParameter?: string | Initializer<Message>): Message;
     info(messageParameter?: string | Initializer<Message>): Message;
   }
 
