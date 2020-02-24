@@ -1,3 +1,9 @@
 const tsDefaultSequence = 
 `let user = actor('User');
-let service = actor('Service');`;
+let controller = actor('Controller');
+let service = actor('Service');
+
+user.send(controller, '/rest/endpoint')
+        .send(service, 'serviceMethod(...)')
+        .respond()
+    .respond();`;

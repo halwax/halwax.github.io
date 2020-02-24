@@ -9,7 +9,7 @@ class SequenceDiagram {
     this.leftSpace = 20;
     this.actorSpace = 40;
     this.messageLabelMargin = 5;
-    this.lifeLineSpace = 8;
+    this.lifeLineSpace = 10;
     this.lifeLineNodeDimensions = {
       width: 1,
       height: 1,
