@@ -19,6 +19,7 @@ const appTypescriptLibraries = [
   declare class Actor {
     name: string
     send(receiverActor: Actor, messageParameter?: string | Initializer<Message>): Message;
+    info(messageParameter: string | Initializer<Message>): Message;
   }
 
   declare class Message {
@@ -27,6 +28,7 @@ const appTypescriptLibraries = [
     text: string;
     respond(messageParameter?: string | Initializer<Message>): Message;
     send(receiverActor: Actor, messageParameter?: string | Initializer<Message>): Message;
+    info(messageParameter?: string | Initializer<Message>): Message;
   }
 
   declare interface Initializer<T> {

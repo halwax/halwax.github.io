@@ -67,6 +67,13 @@ class Actor {
     return message;
   }
 
+  info(messageParameter) {
+    let message = new Message(this, this, messageParameter);
+    message._info = true;
+    this.sequence.addMessage(message);
+    return message;
+  }
+
   toJsonObj() {
     return {
       id: this.id,
@@ -85,6 +92,7 @@ class Message {
     this.text = '';
     this.rootMessage = null;
     this.response = false;
+    this._info = false;
 
     if(typeof messageParameter === 'function') {
       messageParameter(this);
@@ -96,7 +104,9 @@ class Message {
   }
 
   respond(messageParameter) {
-    if(this.response && !_.isNil(this.rootMessage)) {
+    if(this._info && !_.isNil(this.rootMessage)) {
+      return this.rootMessage.respond(messageParameter);
+    } else if(this.response && !_.isNil(this.rootMessage)) {
       return this.rootMessage.respond(messageParameter);
     }
     let responseMessage = this.receiverActor.send(this.senderActor, messageParameter);
@@ -106,9 +116,18 @@ class Message {
   }
 
   send(newReceiverActor, messageParameter) {
+    if(this._info && !_.isNil(this.rootMessage)) {
+      return this.rootMessage.send(newReceiverActor, messageParameter);
+    }
     let message = this.receiverActor.send(newReceiverActor, messageParameter);
     message.rootMessage = this;
     return message;
+  }
+
+  info(messageParameter) {
+    let info = this.receiverActor.info(messageParameter);
+    info.rootMessage = this;
+    return info;
   }
 
   toJsonObj() {
@@ -117,6 +136,7 @@ class Message {
       receiver: this.receiverActor.id,
       text: this.text,
       response: this.response,
+      info: this._info,
     }
   }
 }

@@ -8,7 +8,7 @@ class SequenceDiagram {
     this.topSpace = 20;
     this.leftSpace = 20;
     this.actorSpace = 40;
-    this.edgeLabelMargin = 2;
+    this.messageLabelMargin = 5;
     this.lifeLineSpace = 10;
     this.lifeLineNodeDimensions = {
       width: 1,
@@ -93,7 +93,7 @@ class SequenceDiagram {
 
   drawMessage(graph, senderVertex, receiverVertex, message) {
 
-    let edgeStyle = 'rounded=1;arcSize=2;endArrow=block;edgeStyle=orthogonalEdgeStyle;';
+    let edgeStyle = 'rounded=1;arcSize=2;endArrow=block;edgeStyle=orthogonalEdgeStyle;' + (message.response ? 'dashed=1;' : '');
     let edge = graph.insertEdge(graph.getDefaultParent(), null, '', senderVertex, receiverVertex, edgeStyle);
 
     let edgeLabelDimensions = {
@@ -115,6 +115,23 @@ class SequenceDiagram {
     }
 
     return edgeLabelDimensions;
+  }
+
+  drawInfo(graph, senderVertex, message) {
+
+    let infoVertexPosition = {
+      x: (senderVertex.geometry.x + senderVertex.geometry.width) + this.messageLabelMargin,
+      y: senderVertex.geometry.y + senderVertex.geometry.height,
+    }
+
+    let infoVertex = graph.insertVertex(graph.getDefaultParent(), null, message.text,
+      infoVertexPosition.x, infoVertexPosition.y, 0, 0,
+      'text;verticalAlign=top;align=left;html=1;fontStyle=0;strokeWidth=1;strokeColor=#E8E8E8;');
+    graph.updateCellSize(infoVertex);
+
+    graph.resizeCell(infoVertex, new mxRectangle(infoVertex.geometry.x, infoVertex.geometry.y, infoVertex.geometry.width, infoVertex.geometry.height + 3));
+
+    return infoVertex.geometry;
   }
 
   toLabel(text) {
@@ -163,52 +180,7 @@ class SequenceDiagram {
       }
 
       for(let message of this.sequence.messages) {
-
-        let senderActorNode = actorToLifelineNodes[message.sender][0];
-        let receiverActorNode = actorToLifelineNodes[message.receiver][0];
-        let [leftNode, rightNode] = [senderActorNode, receiverActorNode].sort((nodeA, nodeB) => {
-          return nodeA.geometry.x - nodeB.geometry.x;
-        });
-
-        let edgeLabelDimensions = this.drawMessage(graph, senderActorNode, receiverActorNode, message);
-
-        if(edgeLabelDimensions.height > 0) {
-
-          for(let actor of this.sequence.actors) {
-            let lifeLineNode = actorToLifelineNodes[actor.id][0];
-            graph.translateCell(lifeLineNode, 0, edgeLabelDimensions.height);
-          }
-
-        }
-
-        let preferredEdgeWidth = edgeLabelDimensions.width + (this.edgeLabelMargin * 2);
-        let currentEdgeWidth = this.calculateNodeXDistance(leftNode, rightNode);
-        let widthDifference = preferredEdgeWidth - currentEdgeWidth;
-
-        if(widthDifference > 0) {
-
-          let shiftRight = false;
-          for(let actor of this.sequence.actors) {
-            let actorLifelineNodes = actorToLifelineNodes[actor.id];
-            if(actorToLifelineNodes[actor.id].includes(rightNode)) {
-              shiftRight = true;
-            }
-            if(shiftRight) {
-              for(let lifelineNode of actorLifelineNodes) {
-                graph.translateCell(lifelineNode, widthDifference, 0);
-              }
-            }
-          }
-
-        }
-
-        for(let actor of this.sequence.actors) {
-
-          let lastLifeLineNode = actorToLifelineNodes[actor.id][0];
-          let lifeLineNode = this.drawLifeLine(graph, lastLifeLineNode, this.lifeLineNodeDimensions.height);
-
-          actorToLifelineNodes[actor.id].unshift(lifeLineNode);
-        }        
+        this.handleMessage(graph, actorToLifelineNodes, message);
       }
 
     } finally {
@@ -218,7 +190,84 @@ class SequenceDiagram {
     return graph;
   }
 
+  handleMessage(graph, actorToLifelineNodes, message) {
+
+    let senderActorNode = actorToLifelineNodes[message.sender][0];
+    let receiverActorNode = actorToLifelineNodes[message.receiver][0];
+
+    let [leftNode, rightNode] = [senderActorNode, receiverActorNode].sort((nodeA, nodeB) => {
+      return nodeA.geometry.x - nodeB.geometry.x;
+    });
+
+    let messageLabelDimensions = {
+      width: 0,
+      height: 0,
+    }
+    if(message.info) {
+      rightNode = this.nextActorNode(actorToLifelineNodes, receiverActorNode);
+      messageLabelDimensions = this.drawInfo(graph, receiverActorNode, message);
+    } else {
+      messageLabelDimensions = this.drawMessage(graph, senderActorNode, receiverActorNode, message);
+    }
+
+    if(messageLabelDimensions.height > 0) {
+      for(let actor of this.sequence.actors) {
+        let lifeLineNode = actorToLifelineNodes[actor.id][0];
+        graph.translateCell(lifeLineNode, 0, messageLabelDimensions.height);
+      }
+    }
+
+    let preferredEdgeWidth = messageLabelDimensions.width + (this.messageLabelMargin * 2);
+    let currentEdgeWidth = this.calculateNodeXDistance(leftNode, rightNode);
+    let widthDifference = preferredEdgeWidth - currentEdgeWidth;
+
+    if(widthDifference > 0) {
+
+      let shiftRight = false;
+      for(let actor of this.sequence.actors) {
+        let actorLifelineNodes = actorToLifelineNodes[actor.id];
+        if(actorToLifelineNodes[actor.id].includes(rightNode)) {
+          shiftRight = true;
+        }
+        if(shiftRight) {
+          for(let lifelineNode of actorLifelineNodes) {
+            graph.translateCell(lifelineNode, widthDifference, 0);
+          }
+        }
+      }
+
+    }
+
+    for(let actor of this.sequence.actors) {
+
+      let lastLifeLineNode = actorToLifelineNodes[actor.id][0];
+      let lifeLineNode = this.drawLifeLine(graph, lastLifeLineNode, this.lifeLineNodeDimensions.height);
+
+      actorToLifelineNodes[actor.id].unshift(lifeLineNode);
+    }    
+  }
+
+  nextActorNode(actorToLifelineNodes, lifelineNode) {
+
+    for(let actor of this.sequence.actors) {
+      if(actorToLifelineNodes[actor.id].includes(lifelineNode)) {
+        let actorIdx = this.sequence.actors.indexOf(actor);
+        let nextActor = this.sequence.actors[actorIdx + 1];
+        if(_.isNil(nextActor)) {
+          return null;
+        }
+        return actorToLifelineNodes[nextActor.id][0];
+      }
+    }
+
+    return null;
+  }
+
   calculateNodeXDistance(nodeA, nodeB) {
+    if(_.isNil(nodeA) || _.isNil(nodeB)) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+
     let [leftNode, rightNode] = [nodeA, nodeB].sort((a, b) => {
       return a.geometry.x - b.geometry.x;
     });
