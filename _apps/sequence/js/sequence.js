@@ -2,7 +2,7 @@ class Sequence {
 
   constructor(sequenceParameter) {
     
-    this.actors = [];
+    this.objects = [];
     this.messages = [];
     this.draft = false;
     this.name = '';
@@ -14,17 +14,17 @@ class Sequence {
     }
   }
 
-  addActor(actorParameter) {
+  addObject(objectParameter) {
 
-    if(actorParameter instanceof Actor) {
-      this.actors.push(actorParameter);
-      return actorParameter;
+    if(objectParameter instanceof SequenceObject) {
+      this.objects.push(objectParameter);
+      return objectParameter;
     }
 
-    let actor = new Actor(this, actorParameter);
-    this.actors.push(actor);
+    let object = new SequenceObject(this, objectParameter);
+    this.objects.push(object);
 
-    return actor;
+    return object;
   }
 
   addMessage(message) {
@@ -34,21 +34,21 @@ class Sequence {
   toJsonObj() {
     return {
       name: this.name,
-      actors: this.actors.map(actor => actor.toJsonObj()),
+      objects: this.objects.map(object => object.toJsonObj()),
       messages: this.messages.map(message => message.toJsonObj()),
       draft: this.draft,
     }
   }
 }
 
-class Actor {
+class SequenceObject {
 
-  constructor(sequence, actorParameter) {
+  constructor(sequence, objectParameter) {
     this.sequence = sequence;
-    if(typeof actorParameter === 'string') {
-      this.init(actorParameter);
-    } else if(typeof actorParameter === 'function') {
-      actorParameter(this);
+    if(typeof objectParameter === 'string') {
+      this.init(objectParameter);
+    } else if(typeof objectParameter === 'function') {
+      objectParameter(this);
     }
   }
 
@@ -61,8 +61,8 @@ class Actor {
     }
   }
 
-  send(receiverActor, messageParameter) {
-    let message = new Message(this, receiverActor, messageParameter);
+  send(receiver, messageParameter) {
+    let message = new Message(this, receiver, messageParameter);
     this.sequence.addMessage(message);
     return message;
   }
@@ -85,10 +85,10 @@ class Actor {
 
 class Message {
 
-  constructor(senderActor, receiverActor, messageParameter) {
+  constructor(sender, receiver, messageParameter) {
     
-    this.senderActor = senderActor;
-    this.receiverActor = receiverActor;
+    this.sender = sender;
+    this.receiver = receiver;
     this.text = '';
     this.rootMessage = null;
     this.response = false;
@@ -109,31 +109,31 @@ class Message {
     } else if(this.response && !_.isNil(this.rootMessage)) {
       return this.rootMessage.respond(messageParameter);
     }
-    let responseMessage = this.receiverActor.send(this.senderActor, messageParameter);
+    let responseMessage = this.receiver.send(this.sender, messageParameter);
     responseMessage.rootMessage = this.rootMessage;
     responseMessage.response = true;
     return responseMessage;
   }
 
-  send(newReceiverActor, messageParameter) {
+  send(newReceiver, messageParameter) {
     if(this._info && !_.isNil(this.rootMessage)) {
-      return this.rootMessage.send(newReceiverActor, messageParameter);
+      return this.rootMessage.send(newReceiver, messageParameter);
     }
-    let message = this.receiverActor.send(newReceiverActor, messageParameter);
+    let message = this.receiver.send(newReceiver, messageParameter);
     message.rootMessage = this;
     return message;
   }
 
   info(messageParameter) {
-    let info = this.receiverActor.info(messageParameter);
+    let info = this.receiver.info(messageParameter);
     info.rootMessage = this;
     return info;
   }
 
   toJsonObj() {
     return {
-      sender: this.senderActor.id,
-      receiver: this.receiverActor.id,
+      sender: this.sender.id,
+      receiver: this.receiver.id,
       text: this.text,
       response: this.response,
       info: this._info,

@@ -4,10 +4,10 @@ class SequenceDiagram {
     this.sequence = sequence;
     this.linkCallBack = linkCallBack;
     this.graphUtils = new GraphUtils();
-    this.minActorWidth = 20;
+    this.minObjectWidth = 20;
     this.topSpace = 20;
     this.leftSpace = 20;
-    this.actorSpace = 40;
+    this.objectSpace = 40;
     this.messageLabelMargin = 5;
     this.lifeLineSpace = 10;
     this.lifeLineNodeDimensions = {
@@ -16,13 +16,13 @@ class SequenceDiagram {
     }
   }
 
-  insertActorInGraph(graph, actor, position) {
+  insertObjectInGraph(graph, object, position) {
 
     let fillColor = '#ffffff';
 
     let comicStyle = this.sequence.draft ? 1 : 0;
 
-    let actorVertex = graph.insertVertex(graph.getDefaultParent(), null,
+    let objectVertex = graph.insertVertex(graph.getDefaultParent(), null,
       '',
       position.x, position.y,
       0, 0,
@@ -30,44 +30,44 @@ class SequenceDiagram {
       'moveParent=1;resizeLast=0;collapsible=0;rounded=0;shadow=0;strokeWidth=2;fillColor=' + fillColor + ';perimeterSpacing=0;' +
       'swimlaneFillColor=#ffffff;fontStyle=0;'
     );
-    if(actorVertex.geometry.width < this.minActorWidth) {
-      graph.resizeCell(actorVertex, new mxRectangle(actorVertex.geometry.x, actorVertex.geometry.y, this.minActorWidth, actorVertex.geometry.height));
+    if(objectVertex.geometry.width < this.minObjectWidth) {
+      graph.resizeCell(objectVertex, new mxRectangle(objectVertex.geometry.x, objectVertex.geometry.y, this.minObjectWidth, objectVertex.geometry.height));
     }
   
     // Creates a stack depending on the orientation of the swimlane
-    let layout = new mxStackLayout(actorVertex, false);
+    let layout = new mxStackLayout(objectVertex, false);
     // Makes sure all children fit into the parent swimlane
     layout.resizeParent = true;        
     // Applies the size to children if parent size changes
     layout.fill = true;
   
-    this.fillActorContainer(graph, actorVertex, actor)
+    this.fillObjectContainer(graph, objectVertex, object);
   
-    graph.resizeCell(actorVertex, new mxRectangle(actorVertex.geometry.x, actorVertex.geometry.y, actorVertex.geometry.width, actorVertex.geometry.height + 3));
+    graph.resizeCell(objectVertex, new mxRectangle(objectVertex.geometry.x, objectVertex.geometry.y, objectVertex.geometry.width, objectVertex.geometry.height + 3));
     
-    return actorVertex;
+    return objectVertex;
   }
 
-  fillActorContainer(graph, actorVertex, actor) {
+  fillObjectContainer(graph, objectVertex, object) {
 
-    let height = actorVertex.geometry.height;
-    let width = actorVertex.geometry.width;
+    let height = objectVertex.geometry.height;
+    let width = objectVertex.geometry.width;
     let offset = height + 2;
 
-    let actorValueNode = document.createElement('ActorNode')
-    actorValueNode.setAttribute('label', this.toLabel(actor.name));
-    actorValueNode.setAttribute('id', actor.id);
+    let objectValueNode = document.createElement('ObjectNode')
+    objectValueNode.setAttribute('label', this.toLabel(object.name));
+    objectValueNode.setAttribute('id', object.id);
   
-    let actorTitleVertex = graph.insertVertex(actorVertex, null, actorValueNode,
+    let objectTitleVertex = graph.insertVertex(objectVertex, null, objectValueNode,
       0, offset, 0, 0,
       'text;html=1;align=center;verticalAlign=top;spacingTop=-2;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0;strokeColor=none;');
-    graph.updateCellSize(actorTitleVertex);
+    graph.updateCellSize(objectTitleVertex);
     
-    offset += actorTitleVertex.geometry.height;
-    width = this.calculateWidth(graph, width, actorTitleVertex);
-    height = this.calculateHeight(graph, height, actorTitleVertex);
+    offset += objectTitleVertex.geometry.height;
+    width = this.calculateWidth(graph, width, objectTitleVertex);
+    height = this.calculateHeight(graph, height, objectTitleVertex);
 
-    graph.resizeCell(actorTitleVertex, new mxRectangle(actorTitleVertex.geometry.x, actorTitleVertex.geometry.y, width, height));
+    graph.resizeCell(objectTitleVertex, new mxRectangle(objectTitleVertex.geometry.x, objectTitleVertex.geometry.y, width, height));
 
   }
 
@@ -153,41 +153,41 @@ class SequenceDiagram {
     
     try {
 
-      let actorPosition = {
+      let objectPosition = {
         x: this.leftSpace,
         y: this.topSpace
       }
   
-      let actorNodeMap = {};
-      let maxActorHeight = 0;
+      let objectNodeMap = {};
+      let maxObjectHeight = 0;
 
-      let actorToLifelineNodes = {};
-      for(let actor of this.sequence.actors) {
-        let actorNode = this.insertActorInGraph(graph,
-          actor,
-          actorPosition);
+      let objectToLifelineNodes = {};
+      for(let object of this.sequence.objects) {
+        let objectNode = this.insertObjectInGraph(graph,
+          object,
+          objectPosition);
 
-        actorNodeMap[actor.id] = actorNode;
-        actorToLifelineNodes[actor.id] = [actorNode];
+        objectNodeMap[object.id] = objectNode;
+        objectToLifelineNodes[object.id] = [objectNode];
 
-        actorPosition.x += this.actorSpace + actorNode.geometry.width;
-        maxActorHeight = Math.max(maxActorHeight, actorNode.geometry.height);
+        objectPosition.x += this.objectSpace + objectNode.geometry.width;
+        maxObjectHeight = Math.max(maxObjectHeight, objectNode.geometry.height);
       }
 
-      for(let actor of this.sequence.actors) {
-        let lifeLineNode = this.drawLifeLine(graph, actorNodeMap[actor.id], maxActorHeight);
-        actorToLifelineNodes[actor.id].unshift(lifeLineNode);
+      for(let object of this.sequence.objects) {
+        let lifeLineNode = this.drawLifeLine(graph, objectNodeMap[object.id], maxObjectHeight);
+        objectToLifelineNodes[object.id].unshift(lifeLineNode);
       }
 
       for(let message of this.sequence.messages) {
-        this.handleMessage(graph, actorToLifelineNodes, message);
+        this.handleMessage(graph, objectToLifelineNodes, message);
       }
 
-      for(let actor of this.sequence.actors) {
-        let lastLifeLineNode = actorToLifelineNodes[actor.id][0];
+      for(let object of this.sequence.objects) {
+        let lastLifeLineNode = objectToLifelineNodes[object.id][0];
         let lifeLineNode = this.drawLifeLine(graph, lastLifeLineNode, this.lifeLineNodeDimensions.height);
   
-        actorToLifelineNodes[actor.id].unshift(lifeLineNode);
+        objectToLifelineNodes[object.id].unshift(lifeLineNode);
       }
 
     } finally {
@@ -197,12 +197,12 @@ class SequenceDiagram {
     return graph;
   }
 
-  handleMessage(graph, actorToLifelineNodes, message) {
+  handleMessage(graph, objectToLifelineNodes, message) {
 
-    let senderActorNode = actorToLifelineNodes[message.sender][0];
-    let receiverActorNode = actorToLifelineNodes[message.receiver][0];
+    let senderObjectNode = objectToLifelineNodes[message.sender][0];
+    let receiverObjectNode = objectToLifelineNodes[message.receiver][0];
 
-    let [leftNode, rightNode] = [senderActorNode, receiverActorNode].sort((nodeA, nodeB) => {
+    let [leftNode, rightNode] = [senderObjectNode, receiverObjectNode].sort((nodeA, nodeB) => {
       return nodeA.geometry.x - nodeB.geometry.x;
     });
 
@@ -211,15 +211,15 @@ class SequenceDiagram {
       height: 0,
     }
     if(message.info) {
-      rightNode = this.nextActorNode(actorToLifelineNodes, receiverActorNode);
-      messageLabelDimensions = this.drawInfo(graph, receiverActorNode, message);
+      rightNode = this.nextObjectNode(objectToLifelineNodes, receiverObjectNode);
+      messageLabelDimensions = this.drawInfo(graph, receiverObjectNode, message);
     } else {
-      messageLabelDimensions = this.drawMessage(graph, senderActorNode, receiverActorNode, message);
+      messageLabelDimensions = this.drawMessage(graph, senderObjectNode, receiverObjectNode, message);
     }
 
     if(messageLabelDimensions.height > 0) {
-      for(let actor of this.sequence.actors) {
-        let lifeLineNode = actorToLifelineNodes[actor.id][0];
+      for(let object of this.sequence.objects) {
+        let lifeLineNode = objectToLifelineNodes[object.id][0];
         graph.translateCell(lifeLineNode, 0, messageLabelDimensions.height);
       }
     }
@@ -231,38 +231,38 @@ class SequenceDiagram {
     if(widthDifference > 0) {
 
       let shiftRight = false;
-      for(let actor of this.sequence.actors) {
-        let actorLifelineNodes = actorToLifelineNodes[actor.id];
-        if(actorToLifelineNodes[actor.id].includes(rightNode)) {
+      for(let object of this.sequence.objects) {
+        let objectLifelineNodes = objectToLifelineNodes[object.id];
+        if(objectToLifelineNodes[object.id].includes(rightNode)) {
           shiftRight = true;
         }
         if(shiftRight) {
-          for(let lifelineNode of actorLifelineNodes) {
+          for(let lifelineNode of objectLifelineNodes) {
             graph.translateCell(lifelineNode, widthDifference, 0);
           }
         }
       }
     }
 
-    for(let actor of this.sequence.actors) {
+    for(let object of this.sequence.objects) {
 
-      let lastLifeLineNode = actorToLifelineNodes[actor.id][0];
+      let lastLifeLineNode = objectToLifelineNodes[object.id][0];
       let lifeLineNode = this.drawLifeLine(graph, lastLifeLineNode, this.lifeLineNodeDimensions.height);
 
-      actorToLifelineNodes[actor.id].unshift(lifeLineNode);
+      objectToLifelineNodes[object.id].unshift(lifeLineNode);
     }    
   }
 
-  nextActorNode(actorToLifelineNodes, lifelineNode) {
+  nextObjectNode(objectToLifelineNodes, lifelineNode) {
 
-    for(let actor of this.sequence.actors) {
-      if(actorToLifelineNodes[actor.id].includes(lifelineNode)) {
-        let actorIdx = this.sequence.actors.indexOf(actor);
-        let nextActor = this.sequence.actors[actorIdx + 1];
-        if(_.isNil(nextActor)) {
+    for(let object of this.sequence.objects) {
+      if(objectToLifelineNodes[object.id].includes(lifelineNode)) {
+        let objectIdx = this.sequence.objects.indexOf(object);
+        let nextObject = this.sequence.objects[objectIdx + 1];
+        if(_.isNil(nextObject)) {
           return null;
         }
-        return actorToLifelineNodes[nextActor.id][0];
+        return objectToLifelineNodes[nextObject.id][0];
       }
     }
 

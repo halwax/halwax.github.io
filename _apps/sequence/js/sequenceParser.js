@@ -10,8 +10,8 @@ function title(sequenceName) {
   sequence.name = sequenceName;
 }
 
-function actor(actorParam) {
-  return sequence.addActor(actorParam);
+function object(objectParam) {
+  return sequence.addObject(objectParam);
 }
 
 ${sequenceText}

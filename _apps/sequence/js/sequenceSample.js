@@ -1,7 +1,7 @@
 const tsDefaultSequence = 
-`let user = actor(\`User\`);
-let controller = actor(\`Controller\`);
-let service = actor(\`Service\`);
+`let user = object(\`User\`);
+let controller = object(\`Controller\`);
+let service = object(\`Service\`);
 
 user
     .send(controller, \`/rest/endpoint\`)
