@@ -81,6 +81,10 @@ Draw.loadPlugin(function (ui) {
     graph.scrollCellToVisible(graph.getSelectionCell());
   }
 
+  function addRelationship(relationshipObject) {
+
+  }
+
   function addClass(classObject, insertAtPoint) {
 
     let fillColor = '#ffffff';
@@ -110,8 +114,159 @@ Draw.loadPlugin(function (ui) {
   const defaultClassAttributes = 'id: Long\n' + 'name: String';
 
   // Adds resource for action
-  mxResources.parse('addClassDiagram=Add Class ...');
-  mxResources.parse('editClassDiagram=Edit Class ...');
+  mxResources.parse('addClass=Add Class ...');
+  mxResources.parse('editClass=Edit Class ...');
+  mxResources.parse('addRelationship=Add Relationship ...')
+
+  class RelationshipDialog {
+
+    constructor(addFunction) {
+      this.initWindow(document.createElement('div'));
+      this.addFunction = addFunction;
+      this.cell = null;
+    }
+
+    initWindow(dialogDiv) {
+
+      dialogDiv.style.userSelect = 'none';
+      dialogDiv.style.overflow = 'hidden';
+      dialogDiv.style.padding = '10px';
+      dialogDiv.style.height = '100%';
+
+      this.relationshipTypeSelect = this.addRelationshipTypeSelection(dialogDiv);
+      this.sourceSelect = this.addSourceSelect(dialogDiv);
+      this.sourceLabelInput = this.addSourceLabelInput(dialogDiv);
+      this.targetSelect = this.addTargetSelect(dialogDiv);
+      this.targetLabelInput = this.addTargetLabelInput(dialogDiv);
+
+      mxUtils.br(dialogDiv);
+
+      let closeBtn = mxUtils.button(mxResources.get('close'), () => {
+        this.resetInput();
+        this.close();
+      });
+
+      closeBtn.style.marginTop = '8px';
+      closeBtn.style.marginRight = '4px';
+      closeBtn.style.padding = '4px';
+      dialogDiv.appendChild(closeBtn);
+
+      this.saveBtn = mxUtils.button('Add', () => {
+
+        this.addFunction({
+          source: this.sourceSelect.value,
+          sourceLabel: this.sourceLabelInput.value,
+          target: this.targetSelect.value,
+          targetLabel: this.targetLabelInput.value,
+        });
+        this.resetInput();
+        this.close();
+      });
+
+      this.saveBtn.style.marginTop = '8px';
+      this.saveBtn.style.padding = '4px';
+      dialogDiv.appendChild(this.saveBtn);
+
+      let dialogWindow = new mxWindow(mxResources.get('addRelation'), dialogDiv, document.body.offsetWidth - 480, 140,
+        320, 330, true, true);
+      dialogWindow.destroyOnClose = false;
+      dialogWindow.setMaximizable(false);
+      dialogWindow.setResizable(false);
+      dialogWindow.setClosable(true);
+
+      this.dialogWindow = dialogWindow;
+    }
+
+    addSourceSelect(dialogDiv) {
+      return this.addSelect(dialogDiv, 'Source', 'sourceSelect', ['A']);
+    }
+
+    addSourceLabelInput(dialogDiv) {
+      return this.addTextInput(dialogDiv, 'Source Label', '', '20px');
+    }
+
+    addTargetSelect(dialogDiv) {
+      return this.addSelect(dialogDiv, 'Target', 'targetSelect', ['A']);
+    }
+
+    addTargetLabelInput(dialogDiv) {
+      return this.addTextInput(dialogDiv, 'Target Label', '', '20px');
+    }
+
+    addClassAttributesInput(dialogDiv) {
+      return this.addTextInput(dialogDiv, 'Attributes', defaultClassAttributes, '80px');
+    }
+
+    addRelationshipTypeSelection(dialogDiv) {
+      return this.addSelect(dialogDiv, 'Relationship Type', 'relationshipTypeSelect', ['Association', 'Generalization', 'Aggregation', 'Composition', 'Realization']);
+    }
+
+    resetInput() {
+      this.sourceLabelInput.value = '';
+      this.targetLabelInput.value = '';
+    }
+
+    addTextInput(dialogDiv, labelText, defaultText, height) {
+
+      this.addLabel(dialogDiv, labelText);
+
+      let text = document.createElement('textarea');
+      text.style.height = height;
+      text.style.width = '100%';
+      text.value = defaultText;
+
+      dialogDiv.appendChild(text);
+
+      return text;
+    }
+
+    addLabel(dialogDiv, labelText) {
+
+      let label = document.createElement('div');
+      label.innerHTML = `<b>${labelText}</b>`;
+      label.style.marginTop = '2px';
+      label.style.marginRight = '0px';
+      label.style.marginBottom = '2px';
+      label.style.padding = '0px';
+
+      dialogDiv.appendChild(label);
+
+      mxUtils.br(dialogDiv);      
+    }
+
+    addSelect(dialogDiv, labelText, selectId, optionValues) {
+
+      this.addLabel(dialogDiv, labelText);
+
+      let select = document.createElement('select');
+      select.id = selectId;
+      dialogDiv.appendChild(select);
+      
+      for (let optionValue of optionValues) {
+          var option = document.createElement("option");
+          option.value = optionValue;
+          option.text = optionValue;
+          select.appendChild(option);
+      }
+
+      return select;
+    }
+
+    close() {
+      this.dialogWindow.setVisible(false);
+    }
+
+    open(input) {
+
+      if (input instanceof mxCell) {
+
+      }
+
+      this.dialogWindow.setTitle(mxResources.get('addRelationship'));
+      this.dialogWindow.setVisible(true);
+    }
+
+  }
 
   class ClassDialog {
 
@@ -166,7 +321,7 @@ Draw.loadPlugin(function (ui) {
       this.saveBtn.style.padding = '4px';
       dialogDiv.appendChild(this.saveBtn);
 
-      let dialogWindow = new mxWindow(mxResources.get('addClassDiagram'), dialogDiv, document.body.offsetWidth - 480, 140,
+      let dialogWindow = new mxWindow(mxResources.get('addClass'), dialogDiv, document.body.offsetWidth - 480, 140,
         320, 300, true, true);
       dialogWindow.destroyOnClose = false;
       dialogWindow.setMaximizable(false);
@@ -224,7 +379,7 @@ Draw.loadPlugin(function (ui) {
       if (input instanceof mxCell) {
 
         edit = true;
-        title = mxResources.get('editClassDiagram');
+        title = mxResources.get('editClass');
         this.cell = input;
         this.insertAtPoint = null;
         this.saveBtn.innerText = 'Save';
@@ -234,7 +389,7 @@ Draw.loadPlugin(function (ui) {
       } else if (input instanceof mxPoint) {
 
         edit = false;
-        title = mxResources.get('addClassDiagram');
+        title = mxResources.get('addClass');
         this.cell = null;
         this.insertAtPoint = input;
         this.saveBtn.innerText = 'Add';
@@ -248,6 +403,7 @@ Draw.loadPlugin(function (ui) {
     }
   }
 
+  let relationshipDialog = new RelationshipDialog(addRelationship);
   let classDialog = new ClassDialog(addClass, editClass);
 
   let uiCreatePopupMenu = ui.menus.createPopupMenu;
@@ -256,9 +412,11 @@ Draw.loadPlugin(function (ui) {
 
     let menuItems = ['-'];
     if (cell === null) {
-      menuItems.push('addClassDiagram');
+      menuItems.push('addClass');
+      menuItems.push('addRelationship');
     } else if (graph.model.isVertex(cell) && typeof cell.value !== 'undefined' && mxUtils.isNode(cell.value)) {
-      menuItems.push('editClassDiagram');
+      menuItems.push('editClass');
+      menuItems.push('addRelationship');
     }
 
     this.addMenuItems(menu, menuItems, null, evt);
@@ -266,12 +424,16 @@ Draw.loadPlugin(function (ui) {
 
   // Add actions
 
-  ui.actions.addAction('addClassDiagram', function (evt) {
+  ui.actions.addAction('addClass', function (evt) {
     classDialog.open(graph.getPointForEvent(evt));
   });
 
-  ui.actions.addAction('editClassDiagram', function (evt) {
+  ui.actions.addAction('editClass', function (evt) {
     classDialog.open(graph.getSelectionCell());
+  });
+
+  ui.actions.addAction('addRelationship', function (evt) {
+    relationshipDialog.open(graph.getSelectionCell());
   });
 
 });
