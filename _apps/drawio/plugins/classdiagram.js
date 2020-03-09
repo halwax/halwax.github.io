@@ -5,6 +5,26 @@ Draw.loadPlugin(function (ui) {
 
   let graph = ui.editor.graph;
 
+  function getClassVertices(input) {
+
+    let vertices = [];
+    if(typeof input !== 'undefined') {
+      vertices = input;
+    } else {
+      vertices = graph.getChildVertices();
+    }
+
+    return vertices
+      .filter(vertex => typeof vertex !== 'undefined')
+      .filter(vertex => (typeof vertex.value !== 'undefined' && mxUtils.isNode(vertex.value)))
+      .map(vertex => {
+        return {
+          name: JSON.parse(vertex.value.getAttribute('object')).name,
+          vertex: vertex,
+        };
+      });
+  }
+
   function calculateWidth(graph, width, vertex) {
     return Math.max(width, graph.getPreferredSizeForCell(vertex).width);
   }
@@ -83,6 +103,39 @@ Draw.loadPlugin(function (ui) {
 
   function addRelationship(relationshipObject) {
 
+    let edgeStyle = 'rounded=1;arcSize=2;edgeStyle=orthogonalEdgeStyle;';
+
+    if(relationshipObject.type === 'Association') {
+      edgeStyle += 'endArrow=open;';
+    } else if (relationshipObject.type === 'Generalization') {
+      edgeStyle += 'endArrow=block;endFill=0;endSize=10;';
+    } else if (relationshipObject.type === 'Aggregation') {
+      edgeStyle += 'startArrow=diamond;startFill=0;startSize=10;endArrow=open;';
+    } else if (relationshipObject.type === 'Composition') {
+      edgeStyle += 'startArrow=diamond;startFill=1;startSize=10;endArrow=open;';
+    } else if (relationshipObject.type === 'Realization') {
+      edgeStyle += 'dashed=1;endArrow=block;endFill=0;endSize=10;';
+    } else if (relationshipObject.type === 'Dependency') {
+      edgeStyle += 'dashed=1;endArrow=open;';
+    }
+
+    let classVertices = getClassVertices();
+    let sourceVertex = classVertices.filter(it => it.name === relationshipObject.source).reduce((_, it) => (it.vertex, it.vertex), null);
+    let targetVertex = classVertices.filter(it => it.name === relationshipObject.target).reduce((_, it) => (it.vertex, it.vertex), null);
+  
+    let edge = graph.insertEdge(graph.getDefaultParent(), null, null, sourceVertex, targetVertex, edgeStyle);
+
+    if(relationshipObject.sourceLabel !== '') {
+      let sourceLabelVertex = graph.insertVertex(edge, null, relationshipObject.sourceLabel, -0.8, 10, 0, 0, 'strokeColor=none;fillColor=none;');
+      sourceLabelVertex.geometry.relative = true;
+    }
+
+    if(relationshipObject.targetLabel !== '') {
+      let targetLabelVertex = graph.insertVertex(edge, null, relationshipObject.targetLabel, 0.8, 10, 0, 0, 'strokeColor=none;fillColor=none;');
+      targetLabelVertex.geometry.relative = true; 
+    }
+
+    return edge;
   }
 
   function addClass(classObject, insertAtPoint) {
@@ -154,6 +207,7 @@ Draw.loadPlugin(function (ui) {
       this.saveBtn = mxUtils.button('Add', () => {
 
         this.addFunction({
+          type: this.relationshipTypeSelect.value,
           source: this.sourceSelect.value,
           sourceLabel: this.sourceLabelInput.value,
           target: this.targetSelect.value,
@@ -178,7 +232,7 @@ Draw.loadPlugin(function (ui) {
     }
 
     addSourceSelect(dialogDiv) {
-      return this.addSelect(dialogDiv, 'Source', 'sourceSelect', ['A']);
+      return this.addSelect(dialogDiv, 'Source', 'sourceSelect', []);
     }
 
     addSourceLabelInput(dialogDiv) {
@@ -186,19 +240,15 @@ Draw.loadPlugin(function (ui) {
     }
 
     addTargetSelect(dialogDiv) {
-      return this.addSelect(dialogDiv, 'Target', 'targetSelect', ['A']);
+      return this.addSelect(dialogDiv, 'Target', 'targetSelect', []);
     }
 
     addTargetLabelInput(dialogDiv) {
       return this.addTextInput(dialogDiv, 'Target Label', '', '20px');
     }
 
-    addClassAttributesInput(dialogDiv) {
-      return this.addTextInput(dialogDiv, 'Attributes', defaultClassAttributes, '80px');
-    }
-
     addRelationshipTypeSelection(dialogDiv) {
-      return this.addSelect(dialogDiv, 'Relationship Type', 'relationshipTypeSelect', ['Association', 'Generalization', 'Aggregation', 'Composition', 'Realization']);
+      return this.addSelect(dialogDiv, 'Relationship Type', 'relationshipTypeSelect', ['Association', 'Generalization', 'Aggregation', 'Composition', 'Realization', 'Dependency']);
     }
 
     resetInput() {
@@ -234,6 +284,25 @@ Draw.loadPlugin(function (ui) {
       mxUtils.br(dialogDiv);      
     }
 
+    setOptionValues(select, optionValues, defaultValue) {
+
+      while (select.options.length > 0) {                
+        select.remove(0);
+      }
+
+      for (let optionValue of optionValues) {
+        
+        var option = document.createElement("option");
+        option.value = optionValue;
+        option.text = optionValue;
+        select.appendChild(option);
+
+        if(optionValue === defaultValue) {
+          option.selected = true;
+        }
+      }
+    }
+
     addSelect(dialogDiv, labelText, selectId, optionValues) {
 
       this.addLabel(dialogDiv, labelText);
@@ -241,13 +310,8 @@ Draw.loadPlugin(function (ui) {
       let select = document.createElement('select');
       select.id = selectId;
       dialogDiv.appendChild(select);
-      
-      for (let optionValue of optionValues) {
-          var option = document.createElement("option");
-          option.value = optionValue;
-          option.text = optionValue;
-          select.appendChild(option);
-      }
+
+      this.setOptionValues(select, optionValues);
 
       return select;
     }
@@ -256,14 +320,14 @@ Draw.loadPlugin(function (ui) {
       this.dialogWindow.setVisible(false);
     }
 
-    open(input) {
+    open(classNames, selectedClassName) {
 
-      if (input instanceof mxCell) {
-
-      }
+      this.setOptionValues(this.sourceSelect, classNames, selectedClassName);
+      this.setOptionValues(this.targetSelect, classNames);
 
       this.dialogWindow.setTitle(mxResources.get('addRelationship'));
       this.dialogWindow.setVisible(true);
+      
     }
 
   }
@@ -433,7 +497,11 @@ Draw.loadPlugin(function (ui) {
   });
 
   ui.actions.addAction('addRelationship', function (evt) {
-    relationshipDialog.open(graph.getSelectionCell());
+
+    let classNames = getClassVertices().reduce((list, it) => (list.push(it.name), list), []);
+    let selectedClassName = getClassVertices([graph.getSelectionCell()]).reduce((_, it) => (it.name, it.name), null);
+
+    relationshipDialog.open(classNames, selectedClassName);
   });
 
 });
