@@ -33,7 +33,7 @@ Draw.loadPlugin(function (ui) {
 
     let elementVertexList = [];
 
-    if (typeof elements !== 'undefined' || elements.length > 0) {
+    if (typeof elements !== 'undefined' && elements.length > 0) {
       
       // add divider line
       let dividerLine = graph.insertVertex(typeVertex, null, '', 0, offset, 100, 3, 'fillColor=#000000;strokeWidth=1;align=left;verticalAlign=middle;spacingTop=2;spacingBottom=2;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=none;');
@@ -132,8 +132,13 @@ Draw.loadPlugin(function (ui) {
 
     if(relationshipObject.targetLabel !== '') {
       let targetLabelVertex = graph.insertVertex(edge, null, relationshipObject.targetLabel, 0.8, 10, 0, 0, 'strokeColor=none;fillColor=none;');
-      targetLabelVertex.geometry.relative = true; 
+      targetLabelVertex.geometry.relative = true;
     }
+
+    // trick to force mxgraph to update the
+    // location of the edge labels
+    graph.translateCell(sourceVertex, 1, 1);
+    graph.translateCell(sourceVertex, -1, -1);
 
     return edge;
   }
@@ -366,15 +371,21 @@ Draw.loadPlugin(function (ui) {
       dialogDiv.appendChild(closeBtn);
 
       this.saveBtn = mxUtils.button('Save', () => {
+
+        let attributes = [];
+        if(this.classAttributesInput.value !== '') {
+          attributes = this.classAttributesInput.value.split(/\r?\n/);
+        }
+
         if (this.edit) {
           this.editFunction({
             name: this.classNameInput.value,
-            attributes: this.classAttributesInput.value.split(/\r?\n/)
+            attributes: attributes,
           }, this.cell);
         } else {
           this.addFunction({
             name: this.classNameInput.value,
-            attributes: this.classAttributesInput.value.split(/\r?\n/)
+            attributes: attributes,
           }, this.insertAtPoint);
         }
         this.setNameAndAttributes(defaultClassName, defaultClassAttributes);
@@ -477,9 +488,12 @@ Draw.loadPlugin(function (ui) {
     let menuItems = ['-'];
     if (cell === null) {
       menuItems.push('addClass');
-      menuItems.push('addRelationship');
     } else if (graph.model.isVertex(cell) && typeof cell.value !== 'undefined' && mxUtils.isNode(cell.value)) {
       menuItems.push('editClass');
+    }
+
+    let classNames = getClassVertices().reduce((list, it) => (list.push(it.name), list), []);
+    if(classNames.length > 0) {
       menuItems.push('addRelationship');
     }
 
